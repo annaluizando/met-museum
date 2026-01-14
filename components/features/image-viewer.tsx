@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { X, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { X, ZoomIn, ZoomOut, Maximize2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 
@@ -22,30 +22,41 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isImageLoading, setIsImageLoading] = useState(true)
+  const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(true)
 
   const minZoom = 1
   const maxZoom = 4
   const zoomStep = 0.5
 
-  // Handle escape key to close fullscreen
+  // Handle keyboard shortcuts
   useEffect(() => {
     if (!isFullscreen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        closeFullscreen()
+        setIsFullscreen(false)
+        setZoom(1)
+        setPosition({ x: 0, y: 0 })
+        setIsFullscreenImageLoading(false)
       } else if (e.key === '+' || e.key === '=') {
         e.preventDefault()
-        handleZoomIn()
+        setZoom((prev) => Math.min(prev + zoomStep, maxZoom))
       } else if (e.key === '-') {
         e.preventDefault()
-        handleZoomOut()
+        setZoom((prev) => {
+          const newZoom = Math.max(prev - zoomStep, minZoom)
+          if (newZoom === minZoom) {
+            setPosition({ x: 0, y: 0 })
+          }
+          return newZoom
+        })
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isFullscreen, zoom])
+  }, [isFullscreen])
 
   // Prevent body scroll when fullscreen
   useEffect(() => {
@@ -59,127 +70,63 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
     }
   }, [isFullscreen])
 
-  const openFullscreen = useCallback(() => {
-    setIsFullscreen(true)
-    setZoom(1)
-    setPosition({ x: 0, y: 0 })
-  }, [])
+  // Handle mouse up globally to properly release drag
+  useEffect(() => {
+    if (!isDragging) return
 
-  const closeFullscreen = useCallback(() => {
-    setIsFullscreen(false)
-    setZoom(1)
-    setPosition({ x: 0, y: 0 })
-  }, [])
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
 
-  const handleZoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(prev + zoomStep, maxZoom))
-  }, [])
-
-  const handleZoomOut = useCallback(() => {
-    setZoom((prev) => {
-      const newZoom = Math.max(prev - zoomStep, minZoom)
-      if (newZoom === minZoom) {
-        setPosition({ x: 0, y: 0 })
-      }
-      return newZoom
-    })
-  }, [])
-
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (!isFullscreen) return
-      
-      e.preventDefault()
-      if (e.deltaY < 0) {
-        handleZoomIn()
-      } else {
-        handleZoomOut()
-      }
-    },
-    [isFullscreen, handleZoomIn, handleZoomOut]
-  )
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (zoom <= 1) return
-      setIsDragging(true)
-      setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
-      })
-    },
-    [zoom, position]
-  )
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (!isDragging || zoom <= 1) return
-      
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      })
-    },
-    [isDragging, dragStart, zoom]
-  )
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false)
-  }, [])
-
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (zoom <= 1) return
-      const touch = e.touches[0]
-      setIsDragging(true)
-      setDragStart({
-        x: touch.clientX - position.x,
-        y: touch.clientY - position.y,
-      })
-    },
-    [zoom, position]
-  )
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isDragging || zoom <= 1) return
-      
-      const touch = e.touches[0]
-      setPosition({
-        x: touch.clientX - dragStart.x,
-        y: touch.clientY - dragStart.y,
-      })
-    },
-    [isDragging, dragStart, zoom]
-  )
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false)
-  }, [])
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => window.removeEventListener('mouseup', handleMouseUp)
+  }, [isDragging])
 
   return (
     <>
       {/* Thumbnail with fullscreen button */}
-      <div className="relative group">
+      <div className="relative group w-full h-full">
+        {/* Loading skeleton */}
+        {isImageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 text-zinc-400 dark:text-zinc-600 animate-spin" aria-hidden="true" />
+              <p className="text-sm text-zinc-500 dark:text-zinc-500">Loading image...</p>
+            </div>
+          </div>
+        )}
+        
         <Image
           src={src}
           alt={alt}
           fill
-          className="object-contain"
+          className={cn(
+            "object-contain transition-opacity duration-300",
+            isImageLoading ? "opacity-0" : "opacity-100"
+          )}
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
+          onLoad={() => setIsImageLoading(false)}
+          onError={() => setIsImageLoading(false)}
         />
         
         {/* Fullscreen button overlay */}
-        <button
-          onClick={openFullscreen}
-          className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-inset"
-          aria-label="View fullscreen"
-        >
-          <div className="bg-white dark:bg-zinc-800 rounded-full p-3 shadow-lg">
-            <Maximize2 className="w-6 h-6 text-zinc-900 dark:text-zinc-200" aria-hidden="true" />
-          </div>
-        </button>
+        {!isImageLoading && (
+          <button
+            onClick={() => {
+              setIsFullscreen(true)
+              setZoom(1)
+              setPosition({ x: 0, y: 0 })
+              setIsFullscreenImageLoading(true)
+            }}
+            className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-inset"
+            aria-label="View fullscreen"
+          >
+            <div className="bg-white dark:bg-zinc-800 rounded-full p-3 shadow-lg">
+              <Maximize2 className="cursor-pointer w-6 h-6 text-zinc-900 dark:text-zinc-200" aria-hidden="true" />
+            </div>
+          </button>
+        )}
       </div>
 
       {/* Fullscreen Modal */}
@@ -196,7 +143,13 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleZoomOut}
+                onClick={() => {
+                  const newZoom = Math.max(zoom - zoomStep, minZoom)
+                  setZoom(newZoom)
+                  if (newZoom === minZoom) {
+                    setPosition({ x: 0, y: 0 })
+                  }
+                }}
                 disabled={zoom <= minZoom}
                 aria-label="Zoom out"
                 title="Zoom out (-)"
@@ -211,7 +164,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleZoomIn}
+                onClick={() => setZoom((prev) => Math.min(prev + zoomStep, maxZoom))}
                 disabled={zoom >= maxZoom}
                 aria-label="Zoom in"
                 title="Zoom in (+)"
@@ -223,7 +176,12 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={closeFullscreen}
+              onClick={() => {
+                setIsFullscreen(false)
+                setZoom(1)
+                setPosition({ x: 0, y: 0 })
+                setIsFullscreenImageLoading(false)
+              }}
               className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur hover:bg-white dark:hover:bg-zinc-800 shadow-lg"
               aria-label="Close fullscreen"
               title="Close (Esc)"
@@ -244,20 +202,52 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
           {/* Image Container */}
           <div
             className={cn(
-              "relative w-full h-full flex items-center justify-center overflow-hidden",
-              zoom > 1 && "cursor-move"
+              "relative w-full h-full flex items-center justify-center overflow-hidden select-none",
+              zoom > 1 ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"
             )}
-            onWheel={handleWheel}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            onWheel={(e) => {
+              e.preventDefault()
+              if (e.deltaY < 0) {
+                setZoom((prev) => Math.min(prev + zoomStep, maxZoom))
+              } else {
+                const newZoom = Math.max(zoom - zoomStep, minZoom)
+                setZoom(newZoom)
+                if (newZoom === minZoom) {
+                  setPosition({ x: 0, y: 0 })
+                }
+              }
+            }}
+            onMouseDown={(e) => {
+              if (zoom <= 1) return
+              setIsDragging(true)
+              setDragStart({
+                x: e.clientX - position.x,
+                y: e.clientY - position.y,
+              })
+            }}
+            onMouseMove={(e) => {
+              if (!isDragging || zoom <= 1) return
+              setPosition({
+                x: e.clientX - dragStart.x,
+                y: e.clientY - dragStart.y,
+              })
+            }}
           >
+            {/* Loading skeleton for fullscreen */}
+            {isFullscreenImageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-10 h-10 text-white animate-spin" aria-hidden="true" />
+                  <p className="text-sm text-white/80">Loading...</p>
+                </div>
+              </div>
+            )}
+            
             <div
-              className="relative transition-transform duration-200"
+              className={cn(
+                "relative transition-all duration-200 ease-out",
+                isFullscreenImageLoading && "opacity-0"
+              )}
               style={{
                 transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
                 width: '90vw',
@@ -268,10 +258,16 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
                 src={src}
                 alt={alt}
                 fill
-                className="object-contain"
+                className={cn(
+                  "object-contain transition-opacity duration-300",
+                  isFullscreenImageLoading ? "opacity-0" : "opacity-100"
+                )}
                 sizes="100vw"
                 priority
                 quality={100}
+                draggable={false}
+                onLoad={() => setIsFullscreenImageLoading(false)}
+                onError={() => setIsFullscreenImageLoading(false)}
               />
             </div>
           </div>
@@ -279,7 +275,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
           {/* Instructions */}
           <div className="absolute bottom-4 left-4 text-white/70 text-xs space-y-1 hidden md:block">
             <p>Scroll or use +/- keys to zoom</p>
-            <p>Click and drag to pan when zoomed</p>
+            {zoom > 1 && <p>Click and drag to pan</p>}
             <p>Press Esc to close</p>
           </div>
         </div>
