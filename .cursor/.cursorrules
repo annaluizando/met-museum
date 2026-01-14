@@ -1,0 +1,310 @@
+# MetMuseum Collection Explorer - Cursor Rules
+
+## Project Overview
+Next.js 15 (App Router) application using the Metropolitan Museum of Art Collection API with React Query, Zustand, shadcn/UI, and TypeScript.
+
+## Tech Stack Principles
+
+### Next.js 15 (App Router)
+- Use Server Components by default; add 'use client' only when necessary
+- Leverage React Server Components for data fetching where possible
+- Use `loading.tsx` and `error.tsx` for route-level states
+- Implement proper metadata for SEO
+- Use dynamic routes with proper params typing
+
+### TypeScript
+- **STRICT MODE**: Enable strict TypeScript settings
+- Never use `any`; prefer `unknown` for truly unknown types
+- Define explicit return types for all functions
+- Create comprehensive type definitions for API responses
+- Use discriminated unions for state management
+- Leverage `satisfies` operator for type-safe configurations
+- Use const assertions where appropriate
+
+### React Query
+- Use query keys as constants in a centralized file
+- Implement proper error handling with typed errors
+- Use `staleTime` and `cacheTime` appropriately
+- Leverage prefetching for better UX
+- Use `useInfiniteQuery` for pagination with proper getNextPageParam
+- Create custom hooks that wrap React Query operations
+- Never access query data without null checks
+
+### Zustand
+- Keep stores small and focused (single responsibility)
+- Use immer middleware for complex state updates
+- Implement persist middleware for data that needs to survive reloads
+- Create typed selectors to avoid unnecessary re-renders
+- Separate actions from state in store definition
+- Use shallow equality for object selection
+
+### Styling & UI
+- Use shadcn/UI components as base, customize thoughtfully
+- Follow mobile-first responsive design
+- Implement proper focus management and keyboard navigation
+- Use CSS variables for theming (follow shadcn conventions)
+- Avoid inline styles; prefer Tailwind utility classes
+- Use `cn()` helper for conditional classes
+- Implement smooth transitions and animations (prefer reduced-motion)
+
+## Code Architecture
+
+### Folder Structure
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (routes)/          # Route groups
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── ui/                # shadcn/UI components
+│   ├── features/          # Feature-specific components
+│   └── layouts/           # Layout components
+├── lib/
+│   ├── api/               # API layer
+│   ├── hooks/             # Custom hooks
+│   ├── stores/            # Zustand stores
+│   ├── types/             # TypeScript types
+│   ├── utils/             # Utility functions
+│   └── constants/         # Constants and query keys
+├── stories/               # Storybook stories
+└── __tests__/            # Tests
+```
+
+### API Layer
+- Create a centralized API client with typed responses
+- Implement request/response interceptors for logging
+- Handle errors consistently with typed error responses
+- Use environment variables for API endpoints
+- Implement retry logic for failed requests
+- Add request deduplication
+
+### Component Design
+- Keep components small and focused (< 200 lines)
+- Extract business logic into custom hooks
+- Props interfaces should be explicit and well-documented
+- Use composition over prop drilling
+- Implement proper loading, error, and empty states
+- Follow the "Presentational vs Container" pattern where appropriate
+
+## Security Best Practices
+
+### Input Validation
+- Sanitize all user inputs before display
+- Validate form inputs on both client and server
+- Use zod or similar for runtime type validation
+- Implement rate limiting for API calls
+- Never trust client-side data
+
+### API Security
+- Never expose API keys in client code
+- Use Next.js API routes as proxy when needed
+- Implement proper CORS handling
+- Add request timeout limits
+- Log security-relevant events
+
+### Content Security
+- Sanitize HTML content (especially from API)
+- Use next/image for image optimization and security
+- Implement proper CSP headers
+- Validate URLs before navigation
+- Handle external links safely (noopener, noreferrer)
+
+## Code Quality Standards
+
+### Clean Code Principles
+- **DRY**: Don't Repeat Yourself - extract reusable logic
+- **SOLID**: Follow SOLID principles, especially Single Responsibility
+- **KISS**: Keep It Simple, Stupid - avoid over-engineering
+- **YAGNI**: You Aren't Gonna Need It - don't add unused features
+- Self-documenting code: use clear naming over comments
+- Pure functions where possible
+- Immutable data patterns
+
+### Naming Conventions
+- Components: PascalCase (ArtworkCard.tsx)
+- Hooks: camelCase with 'use' prefix (useArtworkSearch.ts)
+- Utils: camelCase (formatDate.ts)
+- Constants: UPPER_SNAKE_CASE (API_BASE_URL)
+- Types/Interfaces: PascalCase (ArtworkMetadata)
+- CSS classes: kebab-case or Tailwind utilities
+
+### Function Guidelines
+- Prefer arrow functions for components and utilities
+- Max 3-4 parameters; use object for more
+- Single responsibility per function
+- Early returns for guard clauses
+- Descriptive names that explain purpose
+- Async/await over promise chains
+
+### Error Handling
+- Use try-catch for async operations
+- Create custom error classes
+- Provide user-friendly error messages
+- Log errors for debugging (exclude sensitive data)
+- Implement error boundaries
+- Handle edge cases explicitly
+
+## Accessibility (A11Y)
+
+### ARIA Implementation
+- Use semantic HTML first, ARIA second
+- Proper heading hierarchy (h1 → h2 → h3)
+- Label all interactive elements
+- Implement skip links
+- Use role attributes appropriately
+- Add aria-live for dynamic content
+
+### Keyboard Navigation
+- All interactive elements must be keyboard accessible
+- Logical tab order
+- Visible focus indicators
+- Escape key to close modals/dialogs
+- Enter/Space for buttons
+- Arrow keys for navigation where appropriate
+
+### Screen Reader Support
+- Meaningful alt text for images
+- aria-label for icon-only buttons
+- Announce loading states
+- Describe dynamic content changes
+- Use aria-describedby for additional context
+
+## Performance Optimization
+
+### React Optimization
+- Use React.memo() for expensive components
+- Implement proper key props in lists
+- Avoid inline function definitions in JSX
+- Use useCallback and useMemo appropriately
+- Lazy load components with dynamic imports
+- Implement code splitting at route level
+
+### Data Fetching
+- Parallel data fetching where possible
+- Prefetch on hover for better perceived performance
+- Implement optimistic updates for mutations
+- Use pagination/infinite scroll for large lists
+- Cache responses aggressively with React Query
+- Implement request deduplication
+
+### Assets & Images
+- Use next/image for automatic optimization
+- Lazy load images below the fold
+- Implement proper image sizing
+- Use modern formats (WebP, AVIF)
+- Preload critical assets
+- Implement skeleton screens
+
+## Testing Strategy
+
+### Unit Tests
+- Test utility functions thoroughly
+- Test custom hooks with React Hooks Testing Library
+- Mock external dependencies
+- Test edge cases and error scenarios
+- Aim for high coverage on business logic
+- Use descriptive test names
+
+### Integration Tests
+- Test user interactions
+- Test form submissions
+- Test navigation flows
+- Test error states
+- Use React Testing Library queries
+- Avoid testing implementation details
+
+### Test Structure
+- Arrange-Act-Assert pattern
+- One assertion per test when possible
+- Use data-testid sparingly (prefer accessible queries)
+- Mock API calls consistently
+- Setup and teardown properly
+- Descriptive test descriptions
+
+## Storybook Best Practices
+
+### Story Organization
+- One story file per component
+- Include all visual states
+- Use Controls for interactive props
+- Document component usage
+- Include accessibility addon
+- Show responsive behavior
+
+### Story Types
+- Default state
+- Loading state
+- Error state
+- Empty state
+- With data/populated
+- Edge cases (long text, missing data)
+- Interactive states (hover, focus, active)
+
+## Git Practices
+
+### Commits
+- Atomic commits (one logical change)
+- Descriptive commit messages
+- Follow conventional commits format
+- Commit working code only
+- Don't commit secrets or API keys
+
+### Branches
+- Feature branches from main
+- Descriptive branch names
+- Keep branches short-lived
+- Regular rebasing with main
+
+## Documentation
+
+### Code Comments
+- Explain WHY, not WHAT
+- Document complex algorithms
+- Add JSDoc for public APIs
+- Comment non-obvious business logic
+- Keep comments updated
+
+### README
+- Clear setup instructions
+- Architecture overview
+- Key technical decisions
+- Trade-offs and future improvements
+- Examples and usage
+
+## Environment Variables
+- Use .env.local for local development
+- Never commit .env files
+- Document all required variables
+- Validate environment variables on startup
+- Use NEXT_PUBLIC_ prefix for client-side vars
+
+## Error Messages
+- User-friendly messages for users
+- Technical messages for developers (console)
+- Actionable error messages
+- Consistent error UI
+- Graceful degradation
+
+## Performance Budgets
+- Initial load < 3s on 3G
+- Time to Interactive < 5s
+- Lighthouse score > 90
+- Bundle size monitoring
+- No layout shifts
+
+## Code Review Checklist
+- [ ] Types are comprehensive and correct
+- [ ] Error handling is implemented
+- [ ] Loading states are handled
+- [ ] Accessibility requirements met
+- [ ] Tests are written and passing
+- [ ] No console errors or warnings
+- [ ] Responsive on mobile and desktop
+- [ ] Performance considerations addressed
+- [ ] Security best practices followed
+- [ ] Code follows project conventions
+
+---
+
+Remember: Build for users first, developers second. Prioritize UX, accessibility, and performance. But don't forget to make clean, easy and comprehensive code.
