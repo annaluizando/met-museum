@@ -37,11 +37,17 @@ export async function fetchApi<T>(
 
   for (let attempt = 0; attempt < API_CONFIG.RETRY_ATTEMPTS; attempt++) {
     try {
+      const headers: Record<string, string> = {}
+      
+      if (options?.body) {
+        headers['Content-Type'] = 'application/json'
+      }
+
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
+          ...headers,
           ...options?.headers,
         },
       })
