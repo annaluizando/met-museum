@@ -15,7 +15,7 @@ export interface CollectionItem {
 
 interface CollectionsState {
   collections: CollectionItem[]
-  addCollection: (collection: Omit<CollectionItem, 'id' | 'createdAt' | 'updatedAt'>) => void
+  addCollection: (collection: Omit<CollectionItem, 'id' | 'createdAt' | 'updatedAt'>) => string
   updateCollection: (id: string, updates: Partial<CollectionItem>) => void
   deleteCollection: (id: string) => void
   addArtworkToCollection: (collectionId: string, artworkId: number) => void
@@ -30,19 +30,19 @@ export const useCollectionsStore = create<CollectionsState>()(
     (set) => ({
       collections: [],
       
-      addCollection: (collection) =>
-        set((state) => {
-          const now = new Date().toISOString()
-          const newCollection: CollectionItem = {
-            ...collection,
-            id: `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            createdAt: now,
-            updatedAt: now,
-          }
-          return {
-            collections: [...state.collections, newCollection],
-          }
-        }),
+      addCollection: (collection) => {
+        const now = new Date().toISOString()
+        const newCollection: CollectionItem = {
+          ...collection,
+          id: `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          createdAt: now,
+          updatedAt: now,
+        }
+        set((state) => ({
+          collections: [...state.collections, newCollection],
+        }))
+        return newCollection.id
+      },
 
       updateCollection: (id, updates) =>
         set((state) => ({
@@ -64,7 +64,9 @@ export const useCollectionsStore = create<CollectionsState>()(
             collection.id === collectionId
               ? {
                   ...collection,
-                  artworkIds: [...collection.artworkIds, artworkId],
+                  artworkIds: collection.artworkIds.includes(artworkId)
+                    ? collection.artworkIds
+                    : [...collection.artworkIds, artworkId],
                   updatedAt: new Date().toISOString(),
                 }
               : collection

@@ -11,7 +11,7 @@ import { useCollectionsStore, type CollectionItem } from '@/lib/stores/collectio
 interface CollectionFormProps {
   collection?: CollectionItem | null
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess?: (collectionId?: string) => void
 }
 
 /**
@@ -63,16 +63,17 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
         name: name.trim(),
         description: description.trim(),
       })
+      onSuccess?.()
     } else {
       // Create new collection
-      addCollection({
+      const collectionId = addCollection({
         name: name.trim(),
         description: description.trim(),
         artworkIds: [],
       })
+      onSuccess?.(collectionId)
     }
 
-    onSuccess?.()
     onClose()
   }
 

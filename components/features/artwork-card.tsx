@@ -117,5 +117,19 @@ export function ArtworkCard({ artwork, viewMode = 'grid' }: ArtworkCardProps) {
         </div>
       </Card>
     </Link>
+      
+      {/* Add to Collection Button - appears on hover */}
+      {showAddButton && (
+        <div 
+          className="absolute top-2 left-2 z-10"
+          onClick={(e) => e.preventDefault()}
+        >
+          <AddToCollection
+            artworkId={artwork.objectID}
+            artworkTitle={artwork.title || 'Untitled'}
+          />
+        </div>
+      )}
+    </div>
   )
 }

@@ -9,6 +9,7 @@ export const QUERY_KEYS = {
     DETAIL: (id: number) => ['artworks', 'detail', id] as const,
     INFINITE: (query: string, filters?: Record<string, unknown>) =>
       ['artworks', 'infinite', query, filters] as const,
+    COLLECTION: (collectionId: string) => ['artworks', 'collection', collectionId] as const,
   },
   DEPARTMENTS: {
     ALL: ['departments'] as const,
