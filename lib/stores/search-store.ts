@@ -11,9 +11,7 @@ interface SearchState {
   resetFilters: () => void
 }
 
-const DEFAULT_FILTERS: SearchFilters = {
-  hasImages: true, // Default to showing only items with images for better UX
-}
+const DEFAULT_FILTERS: SearchFilters = {}
 
 /**
  * Zustand store for managing search state across the application
