@@ -237,6 +237,15 @@ it('should fetch and return artworks on success', async () => {
 - Async/await over promise chains
 - Explicit return types for all functions
 
+### Code Readability & Control Flow
+- **Avoid deeply nested if-else chains**: Prefer early returns, guard clauses, or extracted helper functions
+- **Extract complex conditionals**: Move nested logic into separate functions with descriptive names
+- **Use helper functions**: Extract repeated patterns (e.g., type conversions, validations) into reusable helpers
+- **Prefer flat structure**: Keep nesting levels to maximum 2-3 levels deep
+- **Use switch statements**: When checking multiple values of the same variable, prefer switch over if-else chains
+- **Strategy pattern**: For complex conditional logic, consider using object maps or strategy functions
+- **Example refactoring**: Instead of nested if-else, extract sanitization logic into helper functions and use early returns
+
 ### Error Handling
 - Use try-catch for async operations
 - Create custom error classes when needed
