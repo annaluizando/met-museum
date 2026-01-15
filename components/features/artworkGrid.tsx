@@ -126,12 +126,12 @@ export function ArtworkGrid() {
 
   const sortOptions = [
     { value: 'relevance', label: 'Relevance' },
-    { value: 'date-newest', label: 'Date: Newest First' },
-    { value: 'date-oldest', label: 'Date: Oldest First' },
-    { value: 'title-asc', label: 'Title: A-Z' },
-    { value: 'title-desc', label: 'Title: Z-A' },
-    { value: 'artist-asc', label: 'Artist: A-Z' },
-    { value: 'artist-desc', label: 'Artist: Z-A' },
+    { value: 'date-newest', label: 'Date - Newest First' },
+    { value: 'date-oldest', label: 'Date - Oldest First' },
+    { value: 'title-asc', label: 'Title - A-Z' },
+    { value: 'title-desc', label: 'Title - Z-A' },
+    { value: 'artist-asc', label: 'Artist - A-Z' },
+    { value: 'artist-desc', label: 'Artist - Z-A' },
   ]
 
   const renderRegularGrid = () => (
