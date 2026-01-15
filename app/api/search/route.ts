@@ -124,11 +124,23 @@ export async function GET(request: NextRequest) {
     if (validatedFilters.geoLocation) {
       params.append('geoLocation', validatedFilters.geoLocation)
     }
-    if (validatedFilters.dateBegin !== undefined) {
-      params.append('dateBegin', validatedFilters.dateBegin.toString())
-    }
-    if (validatedFilters.dateEnd !== undefined) {
-      params.append('dateEnd', validatedFilters.dateEnd.toString())
+    if (validatedFilters.dateBegin !== undefined || validatedFilters.dateEnd !== undefined) {
+      let dateBegin: number
+      let dateEnd: number
+      
+      if (validatedFilters.dateBegin !== undefined && validatedFilters.dateEnd !== undefined) {
+        dateBegin = validatedFilters.dateBegin
+        dateEnd = validatedFilters.dateEnd
+      } else if (validatedFilters.dateBegin !== undefined) {
+        dateBegin = validatedFilters.dateBegin
+        dateEnd = new Date().getFullYear()
+      } else {
+        dateBegin = -5000
+        dateEnd = validatedFilters.dateEnd!
+      }
+      
+      params.append('dateBegin', dateBegin.toString())
+      params.append('dateEnd', dateEnd.toString())
     }
     if (validatedFilters.hasImages === false) {
       params.append('hasImages', 'false')
