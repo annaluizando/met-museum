@@ -1,6 +1,6 @@
 # MetMuseum Explorer 🎨
 
-A modern, accessible web application for exploring The Metropolitan Museum of Art's collection of over 470,000 artworks. Built with Next.js, React Query, Zustand, and TypeScript.
+A modern, accessible web application for exploring The Metropolitan Museum of Art's collection of over 470,000 artworks. Built with Next.js, React Query, Zustand, and TypeScript. UI made using Cursor/Sonnet 4.5.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.1-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
