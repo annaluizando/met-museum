@@ -32,32 +32,36 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     setLocalFilters(filters)
   }, [filters])
 
+  const sanitizeAllFilters = useCallback((filters: SearchFilters): SearchFilters => {
+    const sanitized: SearchFilters = {
+      ...filters,
+      medium: filters.medium ? sanitizeString(filters.medium).substring(0, 200) : undefined,
+      geoLocation: filters.geoLocation ? sanitizeString(filters.geoLocation).substring(0, 200) : undefined,
+      dateBegin: filters.dateBegin !== undefined ? sanitizeNumber(filters.dateBegin, -5000, new Date().getFullYear()) ?? undefined : undefined,
+      dateEnd: filters.dateEnd !== undefined ? sanitizeNumber(filters.dateEnd, -5000, new Date().getFullYear()) ?? undefined : undefined,
+      departmentId: filters.departmentId !== undefined ? sanitizeNumber(filters.departmentId, 1) ?? undefined : undefined,
+    }
+
+    if (sanitized.dateBegin !== undefined && sanitized.dateEnd !== undefined && sanitized.dateBegin > sanitized.dateEnd) {
+      sanitized.dateBegin = sanitized.dateEnd
+    }
+
+    return sanitized
+  }, [])
+
   const handleApplyFilters = useCallback(() => {
     const result = searchFiltersSchema.safeParse(localFilters)
     
     if (result.success) {
       setFilters(result.data)
       onClose()
-    } else {
-      const sanitizedFilters: SearchFilters = {
-        ...localFilters,
-        medium: localFilters.medium ? sanitizeString(localFilters.medium).substring(0, 200) : undefined,
-        geoLocation: localFilters.geoLocation ? sanitizeString(localFilters.geoLocation).substring(0, 200) : undefined,
-        dateBegin: localFilters.dateBegin !== undefined ? sanitizeNumber(localFilters.dateBegin, -5000, new Date().getFullYear()) ?? undefined : undefined,
-        dateEnd: localFilters.dateEnd !== undefined ? sanitizeNumber(localFilters.dateEnd, -5000, new Date().getFullYear()) ?? undefined : undefined,
-        departmentId: localFilters.departmentId !== undefined ? sanitizeNumber(localFilters.departmentId, 1) ?? undefined : undefined,
-      }
-      
-      if (sanitizedFilters.dateBegin !== undefined && sanitizedFilters.dateEnd !== undefined) {
-        if (sanitizedFilters.dateBegin > sanitizedFilters.dateEnd) {
-          sanitizedFilters.dateBegin = sanitizedFilters.dateEnd
-        }
-      }
-      
-      setFilters(sanitizedFilters)
-      onClose()
+      return
     }
-  }, [localFilters, setFilters, onClose])
+
+    const sanitizedFilters = sanitizeAllFilters(localFilters)
+    setFilters(sanitizedFilters)
+    onClose()
+  }, [localFilters, setFilters, onClose, sanitizeAllFilters])
 
   const handleResetFilters = useCallback(() => {
     const defaultFilters: SearchFilters = {}
@@ -128,10 +132,19 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     }
   }, [])
 
+  const getActiveFiltersCount = (filters: SearchFilters): number => {
+    return Object.keys(filters).filter(key => {
+      const value = filters[key as keyof SearchFilters]
+      return value !== undefined && value !== false && value !== ''
+    }).length
+  }
+
   const departmentOptions = departmentsData?.departments.map(dept => ({
     value: dept.departmentId.toString(),
     label: dept.displayName
   })) || []
+
+  const activeFiltersCount = getActiveFiltersCount(localFilters)
 
   return (
     <div 
@@ -352,15 +365,9 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
           >
             Apply Filters
           </Button>
-          {Object.keys(localFilters).filter(key => {
-            const value = localFilters[key as keyof SearchFilters]
-            return value !== undefined && value !== false && value !== ''
-          }).length > 0 && (
+          {activeFiltersCount > 0 && (
             <span className="ml-auto text-xs text-zinc-600 dark:text-zinc-400 flex items-center">
-              {Object.keys(localFilters).filter(key => {
-                const value = localFilters[key as keyof SearchFilters]
-                return value !== undefined && value !== false && value !== ''
-              }).length} active
+              {activeFiltersCount} active
             </span>
           )}
         </div>

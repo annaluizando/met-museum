@@ -46,6 +46,7 @@ export function SearchBar() {
   const lastSavedQueryRef = useRef<string>('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const historyDropdownRef = useRef<HTMLDivElement>(null)
+  const handleHistorySelectRef = useRef<((query: string) => void) | undefined>(undefined)
   
   useEffect(() => {
     currentQueryRef.current = query
@@ -110,35 +111,40 @@ export function SearchBar() {
   }, [isHistoryOpen])
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isHistoryOpen || history.length === 0) return
+    if (!isHistoryOpen || history.length === 0) return
 
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setFocusedHistoryIndex((prev) =>
-          prev < history.length - 1 ? prev + 1 : prev
-        )
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setFocusedHistoryIndex((prev) => (prev > 0 ? prev - 1 : -1))
-      } else if (e.key === 'Enter' && focusedHistoryIndex >= 0) {
-        e.preventDefault()
-        const selectedItem = history[focusedHistoryIndex]
-        if (selectedItem) {
-          handleHistorySelect(selectedItem.query)
-        }
-      } else if (e.key === 'Escape') {
-        setIsHistoryOpen(false)
-        setFocusedHistoryIndex(-1)
-        searchInputRef.current?.focus()
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setFocusedHistoryIndex((prev) =>
+            prev < history.length - 1 ? prev + 1 : prev
+          )
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setFocusedHistoryIndex((prev) => (prev > 0 ? prev - 1 : -1))
+          break
+        case 'Enter':
+          if (focusedHistoryIndex >= 0) {
+            e.preventDefault()
+            const selectedItem = history[focusedHistoryIndex]
+            if (selectedItem && handleHistorySelectRef.current) {
+              handleHistorySelectRef.current(selectedItem.query)
+            }
+          }
+          break
+        case 'Escape':
+          setIsHistoryOpen(false)
+          setFocusedHistoryIndex(-1)
+          searchInputRef.current?.focus()
+          break
       }
     }
 
-    if (isHistoryOpen) {
-      window.addEventListener('keydown', handleKeyDown)
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown)
-      }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isHistoryOpen, history, focusedHistoryIndex])
 
@@ -194,29 +200,23 @@ export function SearchBar() {
       urlUpdateTimeoutRef.current = setTimeout(() => {
         isUserInputRef.current = false
         
-        // Check current URL to avoid unnecessary updates
         const currentUrlQuery = new URLSearchParams(window.location.search).get('q') || ''
         
-        // Only update URL if it actually changed
-        if (validatedQuery !== currentUrlQuery.trim()) {
-          const params = new URLSearchParams(searchParams.toString())
-          
-          if (validatedQuery) {
-            params.set('q', sanitizeString(validatedQuery))
-          } else {
-            params.delete('q')
-          }
-          
-          const newSearch = params.toString()
-          const newUrl = newSearch 
-            ? `${pathname}?${newSearch}`
-            : pathname
-          
-          // Use router.replace with scroll: false to minimize RSC requests
-          // Next.js will batch these updates more efficiently than individual calls
-          router.replace(newUrl, { scroll: false })
+        if (validatedQuery === currentUrlQuery.trim()) return
+
+        const params = new URLSearchParams(searchParams.toString())
+        
+        if (validatedQuery) {
+          params.set('q', sanitizeString(validatedQuery))
+        } else {
+          params.delete('q')
         }
-      }, 200) // Increased delay to batch URL updates and reduce RSC requests
+        
+        const newSearch = params.toString()
+        const newUrl = newSearch ? `${pathname}?${newSearch}` : pathname
+        
+        router.replace(newUrl, { scroll: false })
+      }, 200)
     }, UI_CONFIG.DEBOUNCE_DELAY)
 
     return () => {
@@ -256,20 +256,17 @@ export function SearchBar() {
     setQuery('')
     setLocalQuery('')
     
-    // Update URL immediately - check if it needs to change first
     const currentUrlQuery = new URLSearchParams(window.location.search).get('q') || ''
     
-    if (currentUrlQuery) {
-      const params = new URLSearchParams(searchParams.toString())
-      params.delete('q')
-      
-      const newSearch = params.toString()
-      const newUrl = newSearch 
-        ? `${pathname}?${newSearch}`
-        : pathname
-      
-      router.replace(newUrl, { scroll: false })
-    }
+    if (!currentUrlQuery) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('q')
+    
+    const newSearch = params.toString()
+    const newUrl = newSearch ? `${pathname}?${newSearch}` : pathname
+    
+    router.replace(newUrl, { scroll: false })
     
     // Reset clearing flag after a delay to allow URL update and all effects to settle
     // This prevents the URL sync effect from interfering with the clear operation
@@ -335,6 +332,10 @@ export function SearchBar() {
       }, 300)
     }
   }, [setQuery, searchParams, pathname, router])
+
+  useEffect(() => {
+    handleHistorySelectRef.current = handleHistorySelect
+  }, [handleHistorySelect])
 
   const handleRemoveHistoryItem = useCallback((e: React.MouseEvent, timestamp: number) => {
     e.stopPropagation()

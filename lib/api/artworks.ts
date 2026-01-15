@@ -113,6 +113,37 @@ export async function batchGetArtworks(
  * Find similar artworks based on multiple criteria
  * Uses multiple search strategies and combines results
  */
+const addSearchResultsToSet = (
+  objectIDs: number[] | null | undefined,
+  similarIds: Set<number>,
+  excludeId: number,
+  maxToAdd: number
+): void => {
+  if (!objectIDs) return
+
+  objectIDs
+    .filter(id => id !== excludeId && !similarIds.has(id))
+    .slice(0, maxToAdd)
+    .forEach(id => similarIds.add(id))
+}
+
+const searchAndAddResults = async (
+  query: string,
+  filters: SearchFilters | undefined,
+  similarIds: Set<number>,
+  excludeId: number,
+  maxToAdd: number,
+  strategyName: string
+): Promise<void> => {
+  try {
+    const results = await searchArtworks(query, filters)
+    const objectIDs = results.objectIDs ?? undefined
+    addSearchResultsToSet(objectIDs, similarIds, excludeId, maxToAdd)
+  } catch (error) {
+    console.error(`Error searching by ${strategyName}:`, error)
+  }
+}
+
 export async function findSimilarArtworks(
   artwork: ArtworkObject,
   limit: number = 12
@@ -121,88 +152,61 @@ export async function findSimilarArtworks(
   const excludeId = artwork.objectID
 
   if (artwork.artistDisplayName) {
-    try {
-      const artistResults = await searchArtworks(artwork.artistDisplayName, {
-        hasImages: true,
-      })
-      if (artistResults.objectIDs) {
-        artistResults.objectIDs
-          .filter(id => id !== excludeId)
-          .slice(0, limit)
-          .forEach(id => similarIds.add(id))
-      }
-    } catch (error) {
-      console.error('Error searching by artist:', error)
-    }
+    await searchAndAddResults(
+      artwork.artistDisplayName,
+      { hasImages: true },
+      similarIds,
+      excludeId,
+      limit,
+      'artist'
+    )
   }
 
   if (artwork.department && artwork.culture && similarIds.size < limit) {
-    try {
-      const cultureResults = await searchArtworks(artwork.culture, {
-        hasImages: true,
-      })
-      if (cultureResults.objectIDs) {
-        cultureResults.objectIDs
-          .filter(id => id !== excludeId && !similarIds.has(id))
-          .slice(0, limit - similarIds.size)
-          .forEach(id => similarIds.add(id))
-      }
-    } catch (error) {
-      console.error('Error searching by culture:', error)
-    }
+    await searchAndAddResults(
+      artwork.culture,
+      { hasImages: true },
+      similarIds,
+      excludeId,
+      limit - similarIds.size,
+      'culture'
+    )
   }
 
   if (artwork.classification && similarIds.size < limit) {
-    try {
-      const classificationResults = await searchArtworks(artwork.classification, {
-        hasImages: true,
-      })
-      if (classificationResults.objectIDs) {
-        classificationResults.objectIDs
-          .filter(id => id !== excludeId && !similarIds.has(id))
-          .slice(0, limit - similarIds.size)
-          .forEach(id => similarIds.add(id))
-      }
-    } catch (error) {
-      console.error('Error searching by classification:', error)
-    }
+    await searchAndAddResults(
+      artwork.classification,
+      { hasImages: true },
+      similarIds,
+      excludeId,
+      limit - similarIds.size,
+      'classification'
+    )
   }
 
   if (artwork.objectBeginDate && similarIds.size < limit) {
-    try {
-      const dateBegin = artwork.objectBeginDate - 50
-      const dateEnd = artwork.objectEndDate ? artwork.objectEndDate + 50 : artwork.objectBeginDate + 50
-      const periodResults = await searchArtworks('', {
-        hasImages: true,
-        dateBegin,
-        dateEnd,
-      })
-      if (periodResults.objectIDs) {
-        periodResults.objectIDs
-          .filter(id => id !== excludeId && !similarIds.has(id))
-          .slice(0, limit - similarIds.size)
-          .forEach(id => similarIds.add(id))
-      }
-    } catch (error) {
-      console.error('Error searching by date period:', error)
-    }
+    const dateBegin = artwork.objectBeginDate - 50
+    const dateEnd = artwork.objectEndDate ? artwork.objectEndDate + 50 : artwork.objectBeginDate + 50
+    
+    await searchAndAddResults(
+      '',
+      { hasImages: true, dateBegin, dateEnd },
+      similarIds,
+      excludeId,
+      limit - similarIds.size,
+      'date period'
+    )
   }
 
   if (artwork.tags && artwork.tags.length > 0 && similarIds.size < limit) {
-    try {
-      const tagTerm = artwork.tags[0].term
-      const tagResults = await searchArtworks(tagTerm, {
-        hasImages: true,
-      })
-      if (tagResults.objectIDs) {
-        tagResults.objectIDs
-          .filter(id => id !== excludeId && !similarIds.has(id))
-          .slice(0, limit - similarIds.size)
-          .forEach(id => similarIds.add(id))
-      }
-    } catch (error) {
-      console.error('Error searching by tags:', error)
-    }
+    await searchAndAddResults(
+      artwork.tags[0].term,
+      { hasImages: true },
+      similarIds,
+      excludeId,
+      limit - similarIds.size,
+      'tags'
+    )
   }
 
   if (similarIds.size === 0) {
