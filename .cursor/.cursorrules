@@ -1,16 +1,17 @@
 # MetMuseum Collection Explorer - Cursor Rules
 
 ## Project Overview
-Next.js 15 (App Router) application using the Metropolitan Museum of Art Collection API with React Query, Zustand, shadcn/UI, and TypeScript.
+Next.js 16 (App Router) application using the Metropolitan Museum of Art Collection API with React Query, Zustand, shadcn/UI, and TypeScript.
 
 ## Tech Stack Principles
 
-### Next.js 15 (App Router)
+### Next.js 16 (App Router)
 - Use Server Components by default; add 'use client' only when necessary
 - Leverage React Server Components for data fetching where possible
 - Use `loading.tsx` and `error.tsx` for route-level states
 - Implement proper metadata for SEO
 - Use dynamic routes with proper params typing
+- Prefer `router.replace` with `scroll: false` to minimize RSC requests
 
 ### TypeScript
 - **STRICT MODE**: Enable strict TypeScript settings
@@ -19,24 +20,36 @@ Next.js 15 (App Router) application using the Metropolitan Museum of Art Collect
 - Create comprehensive type definitions for API responses
 - Use discriminated unions for state management
 - Leverage `satisfies` operator for type-safe configurations
-- Use const assertions where appropriate
+- Use const assertions where appropriate (`as const`)
 
 ### React Query
-- Use query keys as constants in a centralized file
+- Use query keys as constants in `lib/constants/query-keys.ts`
 - Implement proper error handling with typed errors
-- Use `staleTime` and `cacheTime` appropriately
+- Use `staleTime` and `gcTime` from `REACT_QUERY_CONFIG` constants
 - Leverage prefetching for better UX
-- Use `useInfiniteQuery` for pagination with proper getNextPageParam
-- Create custom hooks that wrap React Query operations
+- Use `useInfiniteQuery` for pagination with proper `getNextPageParam`
+- Create custom hooks that wrap React Query operations in `lib/hooks/`
 - Never access query data without null checks
+- Use `retry: false` and `gcTime: 0` in test QueryClient configuration
 
 ### Zustand
 - Keep stores small and focused (single responsibility)
-- Use immer middleware for complex state updates
-- Implement persist middleware for data that needs to survive reloads
+- Store files in `lib/stores/` with `-store.ts` suffix (e.g., `collections-store.ts`)
+- Use `persist` middleware for data that needs to survive reloads
 - Create typed selectors to avoid unnecessary re-renders
 - Separate actions from state in store definition
 - Use shallow equality for object selection
+- Export store interface and store hook separately
+
+### shadcn/UI
+- Components must be in `components/ui/` directory
+- Always implement `asChild` prop using `@radix-ui/react-slot` for composition
+- Use `Slot` component when `asChild={true}` to avoid invalid HTML nesting
+- Follow shadcn/ui patterns: `forwardRef`, `displayName`, `cva` for variants
+- Use `cn()` helper for conditional classes
+- Export both component and variants (e.g., `Button`, `buttonVariants`)
+- Reference `components.json` for configuration
+- Use `asChild` pattern: `<Button asChild><Link href="/">Text</Link></Button>`
 
 ### Styling & UI
 - Use shadcn/UI components as base, customize thoughtfully
@@ -46,53 +59,147 @@ Next.js 15 (App Router) application using the Metropolitan Museum of Art Collect
 - Avoid inline styles; prefer Tailwind utility classes
 - Use `cn()` helper for conditional classes
 - Implement smooth transitions and animations (prefer reduced-motion)
+- Use constants from `UI_CONFIG` for delays, thresholds, and limits
 
 ## Code Architecture
 
 ### Folder Structure
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── (routes)/          # Route groups
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   ├── ui/                # shadcn/UI components
-│   ├── features/          # Feature-specific components
-│   └── layouts/           # Layout components
-├── lib/
-│   ├── api/               # API layer
-│   ├── hooks/             # Custom hooks
-│   ├── stores/            # Zustand stores
-│   ├── types/             # TypeScript types
-│   ├── utils/             # Utility functions
-│   └── constants/         # Constants and query keys
-├── stories/               # Storybook stories
-└── __tests__/            # Tests
+app/                    # Next.js App Router
+├── api/               # API routes
+├── artwork/[id]/      # Dynamic routes
+├── collections/       # Collections pages
+├── layout.tsx
+├── page.tsx
+├── loading.tsx
+├── error.tsx
+└── not-found.tsx
+
+components/
+├── ui/                # shadcn/UI components
+├── features/          # Feature-specific components
+└── layouts/           # Layout components
+
+lib/
+├── api/               # API layer
+├── hooks/             # Custom hooks (use* prefix)
+├── stores/            # Zustand stores (*-store.ts)
+├── types/             # TypeScript types
+├── utils/             # Utility functions
+├── constants/         # Constants and query keys
+├── validations/       # Zod schemas
+└── providers/         # React providers
+
+stories/               # Storybook stories
+__tests__/            # Tests
 ```
 
+### Naming Conventions
+- **Components**: PascalCase files and exports (e.g., `ArtworkCard.tsx`, `export function ArtworkCard`)
+- **Hooks**: camelCase with 'use' prefix (e.g., `useArtworkSearch.ts`, `export function useArtworkSearch`)
+- **Stores**: kebab-case with '-store' suffix (e.g., `collections-store.ts`, `useCollectionsStore`)
+- **Utils**: camelCase (e.g., `formatters.ts`, `export function formatDate`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `API_BASE_URL`, `PAGINATION`)
+- **Types/Interfaces**: PascalCase (e.g., `ArtworkObject`, `SearchFilters`)
+- **Files**: Match export naming (PascalCase for components, camelCase for hooks/utils)
+
 ### API Layer
-- Create a centralized API client with typed responses
-- Implement request/response interceptors for logging
+- Create a centralized API client in `lib/api/client.ts`
+- Implement typed responses for all API calls
 - Handle errors consistently with typed error responses
-- Use environment variables for API endpoints
-- Implement retry logic for failed requests
+- Use environment variables for API endpoints (from `API_CONFIG`)
+- Implement retry logic using constants from `API_CONFIG`
 - Add request deduplication
+- Use constants for timeouts, retry attempts, and rate limits
 
 ### Component Design
 - Keep components small and focused (< 200 lines)
-- Extract business logic into custom hooks
-- Props interfaces should be explicit and well-documented
+- Extract business logic into custom hooks in `lib/hooks/`
+- Props interfaces should be explicit (no inline types)
 - Use composition over prop drilling
 - Implement proper loading, error, and empty states
 - Follow the "Presentational vs Container" pattern where appropriate
+- Feature components in `components/features/`, UI primitives in `components/ui/`
+
+### Code Comments
+- **Minimal comments**: Code should be self-documenting through clear naming
+- **JSDoc only**: Use JSDoc comments (`/** */`) for exported functions, components, and hooks
+- **No inline comments**: Avoid `//` comments explaining obvious code
+- **Complex logic only**: Comment only when business logic is non-obvious or requires explanation
+- **WHY not WHAT**: If commenting, explain WHY, not WHAT the code does
+
+## Testing Strategy
+
+### Unit Tests
+- Test utility functions thoroughly
+- Test custom hooks with `@testing-library/react` `renderHook`
+- Mock external dependencies (API calls, external libraries)
+- Test edge cases and error scenarios
+- Aim for high coverage on business logic
+- Use descriptive test names following pattern: `should [expected behavior] when [condition]`
+
+### Test Structure
+- Use `createWrapper()` from `lib/utils/unit-test` for React Query hooks
+- Use `createMockArtwork()` from `lib/utils/unit-test` for mock data
+- Use `createTestQueryClient()` for isolated QueryClient instances
+- Follow Arrange-Act-Assert pattern
+- One assertion per test when possible
+- Use data-testid sparingly (prefer accessible queries: `getByRole`, `getByLabelText`)
+- Mock API calls consistently at the module level
+
+### Testing Best Practices
+- **NO hardcoded timeouts**: Never use `setTimeout`, `setInterval`, or hardcoded delays in tests
+- **Use `waitFor`**: Always use `waitFor` from `@testing-library/react` for async assertions
+- **No sleep/delay utilities**: Avoid `sleep()`, `delay()`, or similar utilities
+- **Proper async handling**: Use `async/await` with `waitFor` for all async test operations
+- **Mock timers**: Use Jest fake timers only when testing time-dependent logic
+- **Test isolation**: Each test should be independent and not rely on previous test state
+
+### Example Test Pattern
+```typescript
+it('should fetch and return artworks on success', async () => {
+  mockSearchArtworks.mockResolvedValue({ total: 5, objectIDs: [1, 2, 3] })
+  
+  const { result } = renderHook(
+    () => useArtworkSearch({ query: 'test' }),
+    { wrapper: createWrapper() }
+  )
+  
+  await waitFor(() => expect(result.current.isSuccess).toBe(true))
+  expect(result.current.data).toBeDefined()
+})
+```
+
+## Library Usage Standards
+
+### shadcn/UI
+- Always implement `asChild` prop correctly using `Slot` from `@radix-ui/react-slot`
+- Use `components.json` for configuration
+- Follow shadcn/ui component patterns exactly
+- Never nest interactive elements (use `asChild` instead)
+
+### React Query
+- Use query keys from `QUERY_KEYS` constants
+- Use config values from `REACT_QUERY_CONFIG` constants
+- Create custom hooks that wrap `useQuery`/`useInfiniteQuery`
+- Always handle loading, error, and success states
+
+### Zustand
+- Use `persist` middleware for client-side persistence
+- Keep stores focused on single domain
+- Export typed store hooks (e.g., `useCollectionsStore`)
+
+### Zod
+- Define schemas in `lib/validations/`
+- Use for runtime type validation
+- Validate API responses and user inputs
 
 ## Security Best Practices
 
 ### Input Validation
-- Sanitize all user inputs before display
-- Validate form inputs on both client and server
-- Use zod or similar for runtime type validation
+- Sanitize all user inputs before display using `lib/utils/sanitize`
+- Validate form inputs on both client and server with Zod
+- Use zod schemas for runtime type validation
 - Implement rate limiting for API calls
 - Never trust client-side data
 
@@ -100,12 +207,12 @@ src/
 - Never expose API keys in client code
 - Use Next.js API routes as proxy when needed
 - Implement proper CORS handling
-- Add request timeout limits
+- Use timeout limits from `API_CONFIG`
 - Log security-relevant events
 
 ### Content Security
-- Sanitize HTML content (especially from API)
-- Use next/image for image optimization and security
+- Sanitize HTML content (especially from API) using sanitize utilities
+- Use `next/image` for image optimization and security
 - Implement proper CSP headers
 - Validate URLs before navigation
 - Handle external links safely (noopener, noreferrer)
@@ -113,21 +220,13 @@ src/
 ## Code Quality Standards
 
 ### Clean Code Principles
-- **DRY**: Don't Repeat Yourself - extract reusable logic
+- **DRY**: Don't Repeat Yourself - extract reusable logic to utils/hooks
 - **SOLID**: Follow SOLID principles, especially Single Responsibility
-- **KISS**: Keep It Simple, Stupid - avoid over-engineering
+- **KISS**: Keep It Simple - avoid over-engineering
 - **YAGNI**: You Aren't Gonna Need It - don't add unused features
 - Self-documenting code: use clear naming over comments
 - Pure functions where possible
 - Immutable data patterns
-
-### Naming Conventions
-- Components: PascalCase (ArtworkCard.tsx)
-- Hooks: camelCase with 'use' prefix (useArtworkSearch.ts)
-- Utils: camelCase (formatDate.ts)
-- Constants: UPPER_SNAKE_CASE (API_BASE_URL)
-- Types/Interfaces: PascalCase (ArtworkMetadata)
-- CSS classes: kebab-case or Tailwind utilities
 
 ### Function Guidelines
 - Prefer arrow functions for components and utilities
@@ -136,11 +235,12 @@ src/
 - Early returns for guard clauses
 - Descriptive names that explain purpose
 - Async/await over promise chains
+- Explicit return types for all functions
 
 ### Error Handling
 - Use try-catch for async operations
-- Create custom error classes
-- Provide user-friendly error messages
+- Create custom error classes when needed
+- Provide user-friendly error messages from `ERROR_MESSAGES`
 - Log errors for debugging (exclude sensitive data)
 - Implement error boundaries
 - Handle edge cases explicitly
@@ -154,6 +254,8 @@ src/
 - Implement skip links
 - Use role attributes appropriately
 - Add aria-live for dynamic content
+- Use `aria-label` for icon-only buttons
+- Use `aria-hidden="true"` for decorative icons
 
 ### Keyboard Navigation
 - All interactive elements must be keyboard accessible
@@ -173,10 +275,10 @@ src/
 ## Performance Optimization
 
 ### React Optimization
-- Use React.memo() for expensive components
+- Use `React.memo()` for expensive components
 - Implement proper key props in lists
 - Avoid inline function definitions in JSX
-- Use useCallback and useMemo appropriately
+- Use `useCallback` and `useMemo` appropriately
 - Lazy load components with dynamic imports
 - Implement code splitting at route level
 
@@ -189,43 +291,33 @@ src/
 - Implement request deduplication
 
 ### Assets & Images
-- Use next/image for automatic optimization
+- Use `next/image` for automatic optimization
 - Lazy load images below the fold
 - Implement proper image sizing
 - Use modern formats (WebP, AVIF)
 - Preload critical assets
 - Implement skeleton screens
 
-## Testing Strategy
+## Constants & Configuration
 
-### Unit Tests
-- Test utility functions thoroughly
-- Test custom hooks with React Hooks Testing Library
-- Mock external dependencies
-- Test edge cases and error scenarios
-- Aim for high coverage on business logic
-- Use descriptive test names
+### Centralized Constants
+- All constants in `lib/constants/config.ts`
+- Use `as const` for type safety
+- Group related constants (API_CONFIG, PAGINATION, UI_CONFIG, etc.)
+- Never hardcode values that should be configurable
+- Use constants in tests instead of magic numbers
 
-### Integration Tests
-- Test user interactions
-- Test form submissions
-- Test navigation flows
-- Test error states
-- Use React Testing Library queries
-- Avoid testing implementation details
-
-### Test Structure
-- Arrange-Act-Assert pattern
-- One assertion per test when possible
-- Use data-testid sparingly (prefer accessible queries)
-- Mock API calls consistently
-- Setup and teardown properly
-- Descriptive test descriptions
+### Environment Variables
+- Use `.env.local` for local development
+- Never commit `.env` files
+- Document all required variables
+- Validate environment variables on startup
+- Use `NEXT_PUBLIC_` prefix for client-side vars
 
 ## Storybook Best Practices
 
 ### Story Organization
-- One story file per component
+- One story file per component in `stories/`
 - Include all visual states
 - Use Controls for interactive props
 - Document component usage
@@ -256,55 +348,22 @@ src/
 - Keep branches short-lived
 - Regular rebasing with main
 
-## Documentation
-
-### Code Comments
-- Explain WHY, not WHAT
-- Document complex algorithms
-- Add JSDoc for public APIs
-- Comment non-obvious business logic
-- Keep comments updated
-
-### README
-- Clear setup instructions
-- Architecture overview
-- Key technical decisions
-- Trade-offs and future improvements
-- Examples and usage
-
-## Environment Variables
-- Use .env.local for local development
-- Never commit .env files
-- Document all required variables
-- Validate environment variables on startup
-- Use NEXT_PUBLIC_ prefix for client-side vars
-
-## Error Messages
-- User-friendly messages for users
-- Technical messages for developers (console)
-- Actionable error messages
-- Consistent error UI
-- Graceful degradation
-
-## Performance Budgets
-- Initial load < 3s on 3G
-- Time to Interactive < 5s
-- Lighthouse score > 90
-- Bundle size monitoring
-- No layout shifts
-
 ## Code Review Checklist
 - [ ] Types are comprehensive and correct
 - [ ] Error handling is implemented
 - [ ] Loading states are handled
 - [ ] Accessibility requirements met
-- [ ] Tests are written and passing
+- [ ] Tests are written and passing (no hardcoded timeouts)
 - [ ] No console errors or warnings
 - [ ] Responsive on mobile and desktop
 - [ ] Performance considerations addressed
 - [ ] Security best practices followed
 - [ ] Code follows project conventions
+- [ ] No unnecessary comments (only JSDoc for exports)
+- [ ] Constants used instead of magic numbers
+- [ ] shadcn/ui components use `asChild` correctly
+- [ ] Library dependencies used according to best practices
 
 ---
 
-Remember: Build for users first, developers second. Prioritize UX, accessibility, and performance. But don't forget to make clean, easy and comprehensive code.
+**Remember**: Build for users first, developers second. Prioritize UX, accessibility, and performance. Write self-documenting code with minimal comments. Use constants, avoid hardcoded values, and follow established patterns.
