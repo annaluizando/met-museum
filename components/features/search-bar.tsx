@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Search, X, Grid, List, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -12,35 +12,166 @@ import { UI_CONFIG } from '@/lib/constants/config'
 /**
  * Search bar with debounce, view mode toggle, and advanced filters
  * Implements proper keyboard navigation and ARIA labels
+ * Optimized to minimize API requests by using proper debouncing
  */
 export function SearchBar() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const { query, setQuery, viewMode, setViewMode, filters } = useSearchStore()
-  const [localQuery, setLocalQuery] = useState(query)
+  const [localQuery, setLocalQuery] = useState(() => {
+    // Initialize from URL on mount
+    if (typeof window !== 'undefined') {
+      return searchParams.get('q') || ''
+    }
+    return ''
+  })
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
-
-  // Read search query from URL on mount
+  
+  // Refs to prevent circular updates
+  const isUserInputRef = useRef(false)
+  const isClearingRef = useRef(false)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const currentQueryRef = useRef(query)
+  
+  // Keep ref in sync with query
   useEffect(() => {
-    const urlQuery = searchParams.get('q')
-    if (urlQuery && urlQuery !== query) {
-      setLocalQuery(urlQuery)
-      setQuery(urlQuery)
+    currentQueryRef.current = query
+  }, [query])
+
+  // Sync from URL only on external navigation (browser back/forward, direct URL)
+  // Skip when user is actively typing or clearing
+  useEffect(() => {
+    // Don't sync from URL if user is currently typing or clearing
+    if (isUserInputRef.current || isClearingRef.current) {
+      return
+    }
+
+    const urlQuery = searchParams.get('q') || ''
+    const trimmedUrlQuery = urlQuery.trim()
+    const trimmedStoreQuery = query.trim()
+
+    // Only sync if URL actually differs from current state
+    if (trimmedUrlQuery !== trimmedStoreQuery) {
+      setLocalQuery(trimmedUrlQuery)
+      setQuery(trimmedUrlQuery)
     }
   }, [searchParams, query, setQuery])
 
-  // Debounce search query
+  // Debounce search query updates to reduce API requests
+  // This effect only updates the store (which triggers API calls)
+  // Only runs when localQuery changes (user typing), not when query changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setQuery(localQuery)
+    // Skip if we're clearing (handleClear will handle everything)
+    if (isClearingRef.current) {
+      isClearingRef.current = false
+      return
+    }
+
+    // Clear any pending debounce
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    // Mark that this is user input
+    isUserInputRef.current = true
+
+    // Debounce the query update to the store
+    debounceTimeoutRef.current = setTimeout(() => {
+      const trimmedQuery = localQuery.trim()
+      
+      // Only update if different from current query (using ref to avoid dependency)
+      if (trimmedQuery !== currentQueryRef.current.trim()) {
+        setQuery(trimmedQuery)
+      }
+
+      // Update URL after a short delay to batch URL updates
+      if (urlUpdateTimeoutRef.current) {
+        clearTimeout(urlUpdateTimeoutRef.current)
+      }
+
+      urlUpdateTimeoutRef.current = setTimeout(() => {
+        isUserInputRef.current = false
+        
+        // Check current URL to avoid unnecessary updates
+        const currentUrlQuery = new URLSearchParams(window.location.search).get('q') || ''
+        
+        // Only update URL if it actually changed
+        if (trimmedQuery !== currentUrlQuery.trim()) {
+          const params = new URLSearchParams(searchParams.toString())
+          
+          if (trimmedQuery) {
+            params.set('q', trimmedQuery)
+          } else {
+            params.delete('q')
+          }
+          
+          const newSearch = params.toString()
+          const newUrl = newSearch 
+            ? `${pathname}?${newSearch}`
+            : pathname
+          
+          // Use router.replace with scroll: false to minimize RSC requests
+          // Next.js will batch these updates more efficiently than individual calls
+          router.replace(newUrl, { scroll: false })
+        }
+      }, 200) // Increased delay to batch URL updates and reduce RSC requests
     }, UI_CONFIG.DEBOUNCE_DELAY)
 
-    return () => clearTimeout(timeoutId)
-  }, [localQuery, setQuery])
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+      if (urlUpdateTimeoutRef.current) {
+        clearTimeout(urlUpdateTimeoutRef.current)
+      }
+    }
+  }, [localQuery, setQuery, searchParams, pathname, router])
 
   const handleClear = useCallback(() => {
-    setLocalQuery('')
+    // Set flags FIRST to prevent all effects from interfering
+    isClearingRef.current = true
+    isUserInputRef.current = false
+    
+    // Update the ref immediately to prevent any race conditions
+    currentQueryRef.current = ''
+    
+    // Clear any pending debounces
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
+    }
+    if (urlUpdateTimeoutRef.current) {
+      clearTimeout(urlUpdateTimeoutRef.current)
+      urlUpdateTimeoutRef.current = null
+    }
+
+    // Update store and local state immediately (in this order)
     setQuery('')
-  }, [setQuery])
+    setLocalQuery('')
+    
+    // Update URL immediately - check if it needs to change first
+    const currentUrlQuery = new URLSearchParams(window.location.search).get('q') || ''
+    
+    if (currentUrlQuery) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('q')
+      
+      const newSearch = params.toString()
+      const newUrl = newSearch 
+        ? `${pathname}?${newSearch}`
+        : pathname
+      
+      router.replace(newUrl, { scroll: false })
+    }
+    
+    // Reset clearing flag after a delay to allow URL update and all effects to settle
+    // This prevents the URL sync effect from interfering with the clear operation
+    setTimeout(() => {
+      isClearingRef.current = false
+    }, 300) // Increased delay to ensure URL update completes
+  }, [setQuery, searchParams, pathname, router])
 
   const toggleViewMode = useCallback(() => {
     setViewMode(viewMode === 'grid' ? 'list' : 'grid')
