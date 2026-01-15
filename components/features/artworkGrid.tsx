@@ -6,6 +6,7 @@ import { ArtworkCardSkeleton } from './artworkCardSkeleton'
 import { EmptyState } from './emptyState'
 import { ErrorState } from './errorState'
 import { FeaturedArtworks } from './featuredArtworks'
+import { VirtualizedArtworkList } from './virtualizedArtworkList'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { UI_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
@@ -34,7 +35,10 @@ export function ArtworkGrid() {
     enabled: query.trim().length > 0,
   })
 
-  // Intersection Observer for infinite scroll
+  const artworks = data?.pages.flatMap(page => page.artworks) || []
+  const shouldVirtualize = artworks.length >= UI_CONFIG.VIRTUALIZATION_THRESHOLD
+
+  // Intersection Observer for infinite scroll (only for non-virtualized view)
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries
@@ -46,6 +50,9 @@ export function ArtworkGrid() {
   )
 
   useEffect(() => {
+    // Only set up IntersectionObserver for non-virtualized view
+    if (shouldVirtualize) return
+
     const element = loadMoreRef.current
     if (!element) return
 
@@ -56,7 +63,7 @@ export function ArtworkGrid() {
     observer.observe(element)
 
     return () => observer.disconnect()
-  }, [handleObserver])
+  }, [handleObserver, shouldVirtualize])
 
   // Handle view mode transition animation
   useEffect(() => {
@@ -65,7 +72,6 @@ export function ArtworkGrid() {
     return () => clearTimeout(timer)
   }, [viewMode])
 
-  // Show initial loading state
   if (isLoading) {
     return (
       <div className={cn(
@@ -81,7 +87,6 @@ export function ArtworkGrid() {
     )
   }
 
-  // Show error state
   if (isError) {
     return (
       <ErrorState
@@ -91,15 +96,10 @@ export function ArtworkGrid() {
     )
   }
 
-  // Show featured artworks when no query
   if (!query.trim()) {
     return <FeaturedArtworks />
   }
 
-  // Get all artworks from pages
-  const artworks = data?.pages.flatMap(page => page.artworks) || []
-
-  // Show empty results
   if (artworks.length === 0) {
     return (
       <EmptyState
@@ -110,11 +110,11 @@ export function ArtworkGrid() {
     )
   }
 
-  return (
+  const renderRegularGrid = () => (
     <div className="space-y-8">
       {/* Results count */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Found <span className="font-semibold">{artworks.length}</span> artwork{artworks.length !== 1 ? 's' : ''}
           {hasNextPage && ' (loading more...)'}
         </p>
@@ -167,10 +167,65 @@ export function ArtworkGrid() {
 
       {/* End of results indicator */}
       {!hasNextPage && artworks.length > 0 && (
-        <div className="text-center py-8 text-sm text-zinc-500">
+        <div className="text-center py-8 text-sm text-zinc-500 dark:text-zinc-400">
           You've reached the end of the results
         </div>
       )}
     </div>
   )
+
+  if (shouldVirtualize) {
+    return (
+      <div className="space-y-8">
+        {/* Results count */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Found <span className="font-semibold">{artworks.length}</span> artwork{artworks.length !== 1 ? 's' : ''}
+              {hasNextPage && ' (loading more...)'}
+            </p>
+            {/* Virtualization indicator badge */}
+            <span 
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+              title={`Virtualization enabled for ${artworks.length} items (threshold: ${UI_CONFIG.VIRTUALIZATION_THRESHOLD})`}
+            >
+              <svg 
+                className="w-3.5 h-3.5" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M13 10V3L4 14h7v7l9-11h-7z" 
+                />
+              </svg>
+              Virtualized
+            </span>
+          </div>
+        </div>
+
+        {/* Virtualized Artwork List */}
+        <VirtualizedArtworkList
+          artworks={artworks}
+          viewMode={viewMode}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={fetchNextPage}
+        />
+
+        {/* End of results indicator */}
+        {!hasNextPage && artworks.length > 0 && (
+          <div className="text-center py-8 text-sm text-zinc-500 dark:text-zinc-400">
+            You've reached the end of the results
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return renderRegularGrid()
 }

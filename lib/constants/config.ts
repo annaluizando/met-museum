@@ -30,6 +30,9 @@ export const UI_CONFIG = {
   DEBOUNCE_DELAY: 600,
   IMAGE_FALLBACK: '/placeholder-artwork.jpg',
   SEARCH_HISTORY_LIMIT: 10, // Maximum number of search history items to store
+  VIRTUALIZATION_THRESHOLD: 100, // Enable virtualization when items >= this count
+  VIRTUALIZED_LIST_HEIGHT: 600, // Height for virtualized list view (px)
+  VIRTUALIZED_GRID_HEIGHT: 800, // Height for virtualized grid view (px)
 } as const
 
 export const ERROR_MESSAGES = {
