@@ -13,6 +13,7 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 ### Core Functionality
 - **🔍 Advanced Search**: Search artworks by title, artist, culture, or time period with real-time results and filters
 - **♾️ Infinite Scroll**: Seamless pagination with automatic loading as you scroll
+- **⚡ Virtual Scrolling**: Optimized rendering with react-virtuoso for large datasets
 - **🎯 Artwork Details**: Comprehensive metadata including artist, date, medium, dimensions, and tags
 - **🖼️ Image Viewer**: Full-screen modal for viewing high-resolution artwork images
 - **🔗 Similar Artworks**: Discover related artworks with carousel navigation
@@ -80,15 +81,20 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 
 1. **Search Flow**:
    - User types in SearchBar → Zustand updates query → React Query triggers search
-   - API fetches object IDs → Batch fetch artwork details → Infinite scroll pagination
+   - Next.js API route proxies request → Met Museum API fetches object IDs → Batch fetch artwork details → Virtual scrolling with infinite pagination
    
 2. **Collection Flow**:
    - User creates collection → Zustand stores data → LocalStorage persists
    - Data survives page reloads and browser sessions
 
 3. **Detail View Flow**:
-   - User clicks artwork → Next.js dynamic route → React Query fetches details
+   - User clicks artwork → Next.js dynamic route → API route fetches details → React Query caches response
    - Server-side metadata generation for SEO
+
+4. **BFF Pattern**:
+   - Client components call Next.js API routes (`/api/search`, `/api/objects/[id]`, `/api/departments`)
+   - API routes handle validation, sanitization, and proxy requests to Met Museum API
+   - Prevents CORS issues and provides server-side request handling
 
 ## 🛠️ Tech Stack
 
@@ -105,6 +111,9 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 - **[Tailwind CSS 4](https://tailwindcss.com/)** - Utility-first CSS
 - **[shadcn/ui](https://ui.shadcn.com/)** - High-quality React components
 - **[Lucide React](https://lucide.dev/)** - Icon library
+
+### Performance
+- **[react-virtuoso](https://virtuoso.dev/)** - Virtual scrolling for large lists
 
 ### Development Tools
 - **[Storybook 10.1.11](https://storybook.js.org/)** - Component documentation with Next.js Vite framework
@@ -158,28 +167,45 @@ npm run storybook    # Start Storybook
 ```
 metmuseum/
 ├── app/                          # Next.js App Router
+│   ├── api/                      # API routes (BFF pattern)
+│   │   ├── departments/          # Departments endpoint
+│   │   │   └── route.ts
+│   │   ├── objects/[id]/        # Artwork detail endpoint
+│   │   │   └── route.ts
+│   │   └── search/               # Search endpoint
+│   │       └── route.ts
 │   ├── artwork/[id]/            # Dynamic artwork detail page
 │   │   ├── page.tsx             # Server component with metadata
-│   │   └── artworkDetailView.tsx  # Client component
-│   ├── collections/             # Collections page
+│   │   ├── artworkDetailView.tsx # Client component
+│   │   └── loading.tsx           # Loading UI
+│   ├── collections/             # Collections pages
+│   │   ├── [id]/                # Collection detail page
+│   │   │   ├── page.tsx
+│   │   │   ├── collectionDetailView.tsx
+│   │   │   └── loading.tsx
+│   │   └── page.tsx             # Collections list page
 │   ├── layout.tsx               # Root layout with providers
 │   ├── page.tsx                 # Home page (search)
+│   ├── error.tsx                # Error boundary
+│   ├── loading.tsx              # Global loading UI
+│   ├── not-found.tsx             # 404 page
 │   └── globals.css              # Global styles
 ├── components/
 │   ├── features/                # Feature-specific components
-│   │   ├── artworkCard.tsx     # Artwork display card
+│   │   ├── artworkCard.tsx      # Artwork display card
 │   │   ├── artworkCardSkeleton.tsx # Loading skeleton
-│   │   ├── artworkGrid.tsx     # Grid with infinite scroll
+│   │   ├── artworkGrid.tsx      # Grid with infinite scroll
+│   │   ├── virtualizedArtworkList.tsx # Virtual scrolling component
 │   │   ├── searchBar.tsx        # Search input with debounce
-│   │   ├── searchFilters.tsx   # Search filter controls
-│   │   ├── collectionForm.tsx  # CRUD form
-│   │   ├── collectionList.tsx  # Collection management
+│   │   ├── searchFilters.tsx    # Search filter controls
+│   │   ├── collectionForm.tsx   # CRUD form
+│   │   ├── collectionList.tsx   # Collection management
 │   │   ├── emptyState.tsx       # Empty state component
 │   │   ├── errorState.tsx       # Error state component
 │   │   ├── featuredArtworks.tsx # Featured artworks display
 │   │   ├── imageViewer.tsx      # Image viewer modal
 │   │   ├── similarArtworks.tsx  # Similar artworks carousel
-│   │   └── addToCollection.tsx # Add artwork to collection
+│   │   └── addToCollection.tsx  # Add artwork to collection
 │   ├── layouts/                 # Layout components
 │   │   ├── header.tsx           # App header
 │   │   └── footer.tsx           # App footer
@@ -191,10 +217,12 @@ metmuseum/
 │       ├── confirmDialog.tsx
 │       ├── input.tsx
 │       ├── label.tsx
+│       ├── scrollToTop.tsx      # Scroll to top button
 │       ├── select.tsx
 │       ├── skeleton.tsx
 │       ├── textarea.tsx
-│       └── themeToggle.tsx
+│       ├── themeToggle.tsx
+│       └── toast.tsx            # Toast notifications
 ├── lib/
 │   ├── api/                     # API layer
 │   │   ├── client.ts            # Fetch wrapper with retry logic
@@ -203,41 +231,55 @@ metmuseum/
 │   │   ├── config.ts            # Configuration constants
 │   │   └── query-keys.ts        # React Query keys
 │   ├── hooks/                   # Custom React hooks
-│   │   ├── use-artwork-search.ts   # Infinite scroll search
-│   │   ├── use-artwork-detail.ts   # Artwork details
-│   │   ├── useDepartments.ts      # Departments list
+│   │   ├── useArtworkSearch.ts  # Infinite scroll search
+│   │   ├── useArtworkDetail.ts  # Artwork details
+│   │   ├── useDepartments.ts    # Departments list
 │   │   ├── useFeaturedArtworks.ts # Featured artworks
-│   │   ├── useSimilarArtworks.ts  # Similar artworks
-│   │   └── useTheme.ts            # Theme management
+│   │   ├── useSimilarArtworks.ts # Similar artworks
+│   │   └── useTheme.ts          # Theme management
 │   ├── providers/               # React providers
 │   │   └── query-provider.tsx   # React Query provider
 │   ├── stores/                  # Zustand stores
 │   │   ├── collections-store.ts # Collections with persistence
-│   │   ├── searchStore.ts      # Search state
-│   │   └── searchHistoryStore.ts # Search history
+│   │   ├── search-store.ts      # Search state
+│   │   └── search-history-store.ts # Search history
 │   ├── types/                   # TypeScript types
 │   │   └── artwork.ts           # Met API type definitions
-│   └── utils/                   # Utility functions
-│       ├── cn.ts                # Class name merger
-│       ├── formatters.ts        # Data formatters
-│       └── sanitize.ts          # HTML sanitization utilities
+│   ├── utils/                   # Utility functions
+│   │   ├── cn.ts                # Class name merger
+│   │   ├── error-handler.ts     # Error handling utilities
+│   │   ├── filters.ts           # Filter utilities
+│   │   ├── focus-trap.ts        # Focus trap for modals
+│   │   ├── formatters.ts        # Data formatters
+│   │   ├── sanitize.ts          # HTML sanitization utilities
+│   │   ├── sort.ts              # Sorting utilities
+│   │   └── unit-test.ts         # Test utilities
+│   └── validations/             # Zod validation schemas
+│       ├── artwork.ts           # Artwork validation
+│       ├── collection.ts        # Collection validation
+│       └── search.ts            # Search validation
 ├── stories/                     # Storybook stories
 │   ├── ArtworkCard.stories.tsx
 │   ├── ArtworkGrid.stories.tsx
+│   ├── Button.stories.tsx
 │   ├── EmptyState.stories.tsx
 │   └── ErrorState.stories.tsx
 ├── __tests__/                   # Test files
-│   ├── components/
-│   ├── stores/
-│   └── utils/
-├── .storybook/                  # Storybook config
-│   └── main.ts                  # Storybook configuration (Next.js Vite)
-├── .cursorrules                 # Project coding standards
+│   ├── components/              # Component tests
+│   ├── hooks/                   # Hook tests
+│   ├── stores/                  # Store tests
+│   └── utils/                   # Utility tests
+├── public/                      # Static assets
+│   └── theme-init.js            # Theme initialization script
 ├── jest.config.js               # Jest configuration
 ├── jest.setup.ts                # Jest setup
-├── vitest.config.ts            # Vitest configuration
+├── vitest.config.ts             # Vitest configuration
 ├── tsconfig.json                # TypeScript config
-└── tsconfig.test.json           # TypeScript config for tests
+├── tsconfig.test.json           # TypeScript config for tests
+├── next.config.ts               # Next.js configuration
+├── postcss.config.mjs           # PostCSS configuration
+├── components.json              # shadcn/ui configuration
+└── eslint.config.mjs            # ESLint configuration
 ```
 
 ## 🔑 Key Technical Decisions
@@ -260,16 +302,7 @@ metmuseum/
 - Excellent dev tools
 - More granular control over refetching
 
-### 3. Zustand vs Redux for Client State
-**Decision**: Use Zustand  
-**Rationale**:
-- Minimal boilerplate (90% less code than Redux)
-- Built-in persistence middleware
-- No context provider needed
-- Better TypeScript inference
-- Smaller bundle size (~3KB vs ~20KB)
-
-### 4. Batch Fetching Strategy
+### 3. Batch Fetching Strategy
 **Decision**: Fetch artwork IDs first, then batch fetch details  
 **Rationale**:
 - Met API returns all matching IDs upfront
@@ -289,13 +322,14 @@ const artworks = await Promise.all(
 )
 ```
 
-### 5. Infinite Scroll Implementation
-**Decision**: Intersection Observer with React Query  
+### 5. Infinite Scroll & Virtual Scrolling
+**Decision**: Virtual scrolling with react-virtuoso + React Query  
 **Rationale**:
-- Native browser API (no dependencies)
-- Better performance than scroll listeners
-- Automatic cleanup
-- Works with React Query's `useInfiniteQuery`
+- Virtual scrolling only renders visible items for better performance
+- Handles large datasets (470,000+ artworks) efficiently
+- Works seamlessly with React Query's `useInfiniteQuery`
+- Supports both grid and list view modes
+- Automatic cleanup and memory management
 
 ### 6. Type Safety Approach
 **Decision**: Strict TypeScript with comprehensive API types  
@@ -334,10 +368,11 @@ const artworks = await Promise.all(
 ### Improvements
 
 - [ ] Add share functionality (social media, link sharing)
-- [ ] Virtual scrolling for better performance
 - [ ] Export collections (PDF, JSON)
 - [ ] Timeline view for artworks
 - [ ] Multi-language support
+- [ ] Search functionality within collections
+- [ ] Advanced filtering options (color, size, etc.)
 
 ## 🧪 Testing
 
@@ -384,14 +419,16 @@ Visit [http://localhost:6006](http://localhost:6006)
 
 1. **React Query Caching**: 5-minute stale time, aggressive caching
 2. **Debounced Search**: 600ms debounce to reduce API calls
-3. **Image Lazy Loading**: Below-the-fold images load on demand
-4. **Code Splitting**: Dynamic imports for large components
-5. **Optimistic UI**: Instant feedback for collection updates
-6. **Request Deduplication**: Prevents duplicate API calls
-7. **Skeleton Screens**: Better perceived performance
-8. **Image Viewer**: Modal for viewing high-resolution artwork images
-9. **Similar Artworks**: Carousel showing related artworks
-10. **Featured Artworks**: Curated featured collection on homepage
-11. **Search History**: Persistent search history with Zustand
-12. **Theme Toggle**: Dark/light mode support
-13. **BFF (Backend for Frontend)** pattern
+3. **Virtual Scrolling**: Only renders visible items using react-virtuoso
+4. **Image Lazy Loading**: Below-the-fold images load on demand
+5. **Code Splitting**: Dynamic imports for large components
+6. **Optimistic UI**: Instant feedback for collection updates
+7. **Request Deduplication**: Prevents duplicate API calls
+8. **Skeleton Screens**: Better perceived performance
+9. **Image Viewer**: Modal for viewing high-resolution artwork images
+10. **Similar Artworks**: Carousel showing related artworks
+11. **Featured Artworks**: Curated featured collection on homepage
+12. **Search History**: Persistent search history with Zustand
+13. **Theme Toggle**: Dark/light mode support
+14. **BFF (Backend for Frontend) Pattern**: API routes handle validation and proxy requests
+15. **Server-Side Caching**: API routes use Next.js caching with revalidation
