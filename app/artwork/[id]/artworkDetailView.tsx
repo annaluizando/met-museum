@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/features/errorState'
 import { ImageViewer } from '@/components/features/imageViewer'
 import { AddToCollection } from '@/components/features/addToCollection'
+import { SimilarArtworks } from '@/components/features/similarArtworks'
 import { useArtworkDetail } from '@/lib/hooks/useArtworkDetail'
 import { sanitizeImageUrl, formatArtworkDate } from '@/lib/utils/formatters'
 import { ERROR_MESSAGES } from '@/lib/constants/config'
@@ -217,6 +218,9 @@ export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Similar Artworks */}
+      <SimilarArtworks artwork={artwork} />
     </div>
   )
 }

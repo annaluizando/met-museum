@@ -120,3 +120,119 @@ export async function batchGetArtworks(
   
   return Promise.all(promises)
 }
+
+/**
+ * Find similar artworks based on multiple criteria
+ * Uses multiple search strategies and combines results
+ */
+export async function findSimilarArtworks(
+  artwork: ArtworkObject,
+  limit: number = 12
+): Promise<ArtworkObject[]> {
+  const similarIds = new Set<number>()
+  const excludeId = artwork.objectID
+
+  // Strategy 1: Same artist (highest priority)
+  if (artwork.artistDisplayName) {
+    try {
+      const artistResults = await searchArtworks(artwork.artistDisplayName, {
+        hasImages: true,
+      })
+      if (artistResults.objectIDs) {
+        artistResults.objectIDs
+          .filter(id => id !== excludeId)
+          .slice(0, limit)
+          .forEach(id => similarIds.add(id))
+      }
+    } catch (error) {
+      // Silently fail and try other strategies
+      console.error('Error searching by artist:', error)
+    }
+  }
+
+  // Strategy 2: Same department and culture
+  if (artwork.department && artwork.culture && similarIds.size < limit) {
+    try {
+      const cultureResults = await searchArtworks(artwork.culture, {
+        hasImages: true,
+      })
+      if (cultureResults.objectIDs) {
+        cultureResults.objectIDs
+          .filter(id => id !== excludeId && !similarIds.has(id))
+          .slice(0, limit - similarIds.size)
+          .forEach(id => similarIds.add(id))
+      }
+    } catch (error) {
+      console.error('Error searching by culture:', error)
+    }
+  }
+
+  // Strategy 3: Same classification
+  if (artwork.classification && similarIds.size < limit) {
+    try {
+      const classificationResults = await searchArtworks(artwork.classification, {
+        hasImages: true,
+      })
+      if (classificationResults.objectIDs) {
+        classificationResults.objectIDs
+          .filter(id => id !== excludeId && !similarIds.has(id))
+          .slice(0, limit - similarIds.size)
+          .forEach(id => similarIds.add(id))
+      }
+    } catch (error) {
+      console.error('Error searching by classification:', error)
+    }
+  }
+
+  // Strategy 4: Similar time period (within 100 years)
+  if (artwork.objectBeginDate && similarIds.size < limit) {
+    try {
+      const dateBegin = artwork.objectBeginDate - 50
+      const dateEnd = artwork.objectEndDate ? artwork.objectEndDate + 50 : artwork.objectBeginDate + 50
+      const periodResults = await searchArtworks('', {
+        hasImages: true,
+        dateBegin,
+        dateEnd,
+      })
+      if (periodResults.objectIDs) {
+        periodResults.objectIDs
+          .filter(id => id !== excludeId && !similarIds.has(id))
+          .slice(0, limit - similarIds.size)
+          .forEach(id => similarIds.add(id))
+      }
+    } catch (error) {
+      console.error('Error searching by date period:', error)
+    }
+  }
+
+  // Strategy 5: Same tags (if available)
+  if (artwork.tags && artwork.tags.length > 0 && similarIds.size < limit) {
+    try {
+      const tagTerm = artwork.tags[0].term
+      const tagResults = await searchArtworks(tagTerm, {
+        hasImages: true,
+      })
+      if (tagResults.objectIDs) {
+        tagResults.objectIDs
+          .filter(id => id !== excludeId && !similarIds.has(id))
+          .slice(0, limit - similarIds.size)
+          .forEach(id => similarIds.add(id))
+      }
+    } catch (error) {
+      console.error('Error searching by tags:', error)
+    }
+  }
+
+  // Fetch artwork details for the similar IDs
+  if (similarIds.size === 0) {
+    return []
+  }
+
+  const similarArtworkIds = Array.from(similarIds).slice(0, limit)
+  const similarArtworks = await batchGetArtworks(similarArtworkIds)
+  
+  // Filter out null results and return valid artworks
+  return similarArtworks.filter(
+    (artwork): artwork is ArtworkObject => artwork !== null
+  )
+}

@@ -11,6 +11,7 @@ export const QUERY_KEYS = {
       ['artworks', 'infinite', query, filters] as const,
     COLLECTION: (collectionId: string) => ['artworks', 'collection', collectionId] as const,
     FEATURED: ['artworks', 'featured'] as const,
+    SIMILAR: (id: number) => ['artworks', 'similar', id] as const,
   },
   DEPARTMENTS: {
     ALL: ['departments'] as const,
