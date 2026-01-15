@@ -11,6 +11,9 @@ import { VirtualizedArtworkList } from './virtualizedArtworkList'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { hasActiveFilters } from '@/lib/utils/filters'
+import { sortArtworks } from '@/lib/utils/sort'
+import { Select } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { UI_CONFIG } from '@/lib/constants/config'
 import { cn } from '@/lib/utils/cn'
 
@@ -19,7 +22,7 @@ import { cn } from '@/lib/utils/cn'
  * Implements intersection observer for automatic pagination
  */
 export function ArtworkGrid() {
-  const { query, filters, viewMode } = useSearchStore()
+  const { query, filters, viewMode, sortOrder, setSortOrder } = useSearchStore()
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
@@ -35,10 +38,14 @@ export function ArtworkGrid() {
   } = useArtworkSearch({
     query,
     filters,
+    sortOrder,
     enabled: query.trim().length > 0 || hasActiveFilters(filters),
   })
 
-  const artworks = data?.pages.flatMap(page => page.artworks) || []
+  const allArtworks = data?.pages.flatMap(page => page.artworks) || []
+  const artworks = sortOrder === 'relevance' 
+    ? allArtworks 
+    : sortArtworks(allArtworks, sortOrder)
   const shouldVirtualize = artworks.length >= UI_CONFIG.VIRTUALIZATION_THRESHOLD
 
   // Intersection Observer for infinite scroll (only for non-virtualized view)
@@ -117,14 +124,36 @@ export function ArtworkGrid() {
     )
   }
 
+  const sortOptions = [
+    { value: 'relevance', label: 'Relevance' },
+    { value: 'date-newest', label: 'Date: Newest First' },
+    { value: 'date-oldest', label: 'Date: Oldest First' },
+    { value: 'title-asc', label: 'Title: A-Z' },
+    { value: 'title-desc', label: 'Title: Z-A' },
+    { value: 'artist-asc', label: 'Artist: A-Z' },
+    { value: 'artist-desc', label: 'Artist: Z-A' },
+  ]
+
   const renderRegularGrid = () => (
     <div className="space-y-8">
-      {/* Results count */}
-      <div className="flex items-center justify-between">
+      {/* Results count and sort */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Found <span className="font-semibold">{artworks.length}</span> artwork{artworks.length !== 1 ? 's' : ''}
           {hasNextPage && ' (loading more...)'}
         </p>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="sort-order" className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
+            Sort by:
+          </Label>
+          <Select
+            id="sort-order"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+            options={sortOptions}
+            className="w-[180px] cursor-pointer"
+          />
+        </div>
       </div>
 
       {/* Artwork Grid */}
@@ -184,8 +213,8 @@ export function ArtworkGrid() {
   if (shouldVirtualize) {
     return (
       <div className="space-y-8">
-        {/* Results count */}
-        <div className="flex items-center justify-between">
+        {/* Results count and sort */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Found <span className="font-semibold">{artworks.length}</span> artwork{artworks.length !== 1 ? 's' : ''}
@@ -212,6 +241,18 @@ export function ArtworkGrid() {
               </svg>
               Virtualized
             </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="sort-order-virtualized" className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
+              Sort by:
+            </Label>
+            <Select
+              id="sort-order-virtualized"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+              options={sortOptions}
+              className="w-[180px]"
+            />
           </div>
         </div>
 

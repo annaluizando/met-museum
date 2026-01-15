@@ -3,11 +3,14 @@ import { searchArtworks, batchGetArtworks } from '@/lib/api/artworks'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
 import { PAGINATION, REACT_QUERY_CONFIG } from '@/lib/constants/config'
 import { hasActiveFilters } from '@/lib/utils/filters'
+import { sortArtworks } from '@/lib/utils/sort'
 import type { SearchFilters, ArtworkObject } from '@/lib/types/artwork'
+import type { SortOrder } from '@/lib/stores/search-store'
 
 interface UseArtworkSearchOptions {
   query: string
   filters?: SearchFilters
+  sortOrder?: SortOrder
   enabled?: boolean
 }
 
@@ -18,6 +21,7 @@ interface UseArtworkSearchOptions {
 export function useArtworkSearch({ 
   query, 
   filters, 
+  sortOrder = 'relevance',
   enabled = true 
 }: UseArtworkSearchOptions) {
   const hasQuery = query.trim().length > 0
@@ -25,7 +29,7 @@ export function useArtworkSearch({
   const shouldEnable = hasQuery || hasFilters
 
   return useInfiniteQuery({
-    queryKey: QUERY_KEYS.ARTWORKS.INFINITE(query, filters),
+    queryKey: QUERY_KEYS.ARTWORKS.INFINITE(query, filters, sortOrder),
     queryFn: async ({ pageParam = 0 }) => {
       const searchResults = await searchArtworks(query, filters)
       
@@ -54,7 +58,7 @@ export function useArtworkSearch({
         ? validArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
         : validArtworks
 
-      const sortedArtworks = filteredArtworks.sort((a, b) => {
+      const imageSortedArtworks = filteredArtworks.sort((a, b) => {
         const aHasImage = !!(a.primaryImage || a.primaryImageSmall)
         const bHasImage = !!(b.primaryImage || b.primaryImageSmall)
         
@@ -63,10 +67,10 @@ export function useArtworkSearch({
         return 1
       })
 
-      const hasMore = endIndex < searchResults.objectIDs.length
+      const hasMore = endIndex < (searchResults.objectIDs?.length ?? 0)
 
       return {
-        artworks: sortedArtworks,
+        artworks: imageSortedArtworks,
         nextOffset: hasMore ? endIndex : undefined,
         hasMore,
       }

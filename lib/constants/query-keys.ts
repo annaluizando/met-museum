@@ -7,8 +7,8 @@ export const QUERY_KEYS = {
     SEARCH: (query: string, filters?: Record<string, unknown>) => 
       ['artworks', 'search', query, filters] as const,
     DETAIL: (id: number) => ['artworks', 'detail', id] as const,
-    INFINITE: (query: string, filters?: Record<string, unknown>) =>
-      ['artworks', 'infinite', query, filters] as const,
+    INFINITE: (query: string, filters?: Record<string, unknown>, sortOrder?: string) =>
+      ['artworks', 'infinite', query, filters, sortOrder] as const,
     COLLECTION: (collectionId: string) => ['artworks', 'collection', collectionId] as const,
     FEATURED: ['artworks', 'featured'] as const,
     SIMILAR: (id: number) => ['artworks', 'similar', id] as const,
