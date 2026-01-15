@@ -5,11 +5,12 @@ import { ArtworkCard } from './artworkCard'
 import { ArtworkCardSkeleton } from './artworkCardSkeleton'
 import { EmptyState } from './emptyState'
 import { ErrorState } from './errorState'
+import { getErrorMessage } from '@/lib/utils/error-handler'
 import { FeaturedArtworks } from './featuredArtworks'
 import { VirtualizedArtworkList } from './virtualizedArtworkList'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { useSearchStore } from '@/lib/stores/search-store'
-import { UI_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
+import { UI_CONFIG } from '@/lib/constants/config'
 import { cn } from '@/lib/utils/cn'
 
 /**
@@ -28,6 +29,7 @@ export function ArtworkGrid() {
     isFetchingNextPage,
     isLoading,
     isError,
+    error,
     refetch,
   } = useArtworkSearch({
     query,
@@ -87,10 +89,12 @@ export function ArtworkGrid() {
   }
 
   if (isError) {
+    const errorInfo = getErrorMessage(error)
     return (
       <ErrorState
-        message={ERROR_MESSAGES.GENERIC}
-        onRetry={() => refetch()}
+        title={errorInfo.title}
+        message={errorInfo.message}
+        onRetry={errorInfo.isRetryable ? () => refetch() : undefined}
       />
     )
   }

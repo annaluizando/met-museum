@@ -13,7 +13,8 @@ import { useCollectionsStore } from '@/lib/stores/collections-store'
 import { batchGetArtworks } from '@/lib/api/artworks'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
-import { REACT_QUERY_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
+import { REACT_QUERY_CONFIG } from '@/lib/constants/config'
+import { getErrorMessage } from '@/lib/utils/error-handler'
 import { cn } from '@/lib/utils/cn'
 import type { ArtworkObject } from '@/lib/types/artwork'
 
@@ -38,7 +39,7 @@ export function CollectionDetailView({ collectionId }: CollectionDetailViewProps
   const collection = collections.find(c => c.id === collectionId)
 
   // Fetch artworks for this collection
-  const { data: artworks, isLoading, isError } = useQuery({
+  const { data: artworks, isLoading, isError, error } = useQuery({
     queryKey: QUERY_KEYS.ARTWORKS.COLLECTION(collectionId),
     queryFn: async () => {
       if (!collection || collection.artworkIds.length === 0) {
@@ -163,8 +164,8 @@ export function CollectionDetailView({ collectionId }: CollectionDetailViewProps
       ) : isError ? (
         <EmptyState
           type="error"
-          title="Failed to load artworks"
-          description={ERROR_MESSAGES.GENERIC}
+          title={getErrorMessage(error).title}
+          description={getErrorMessage(error).message}
         />
       ) : !artworks || artworks.length === 0 ? (
         <EmptyState

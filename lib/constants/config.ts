@@ -39,4 +39,12 @@ export const UI_CONFIG = {
 
 export const ERROR_MESSAGES = {
   GENERIC: 'Something went wrong. Please try again.',
+  NETWORK: 'Unable to connect. Please check your internet connection and try again.',
+  TIMEOUT: 'The request took too long. Please try again.',
+  NOT_FOUND: 'The requested resource was not found.',
+  SERVER_ERROR: 'The server encountered an error. Please try again later.',
+  UNAUTHORIZED: 'You are not authorized to access this resource.',
+  FORBIDDEN: 'Access to this resource is forbidden.',
+  BAD_REQUEST: 'Invalid request. Please check your input and try again.',
+  VALIDATION: 'Invalid input provided. Please check your data and try again.',
 } as const

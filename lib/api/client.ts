@@ -75,10 +75,20 @@ export async function fetchApi<T>(
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        throw new MetApiError(
-          ERROR_MESSAGES.GENERIC,
-          response.status
-        )
+        let message: string = ERROR_MESSAGES.GENERIC
+        if (response.status === 404) {
+          message = ERROR_MESSAGES.NOT_FOUND
+        } else if (response.status === 500 || response.status >= 500) {
+          message = ERROR_MESSAGES.SERVER_ERROR
+        } else if (response.status === 400) {
+          message = ERROR_MESSAGES.BAD_REQUEST
+        } else if (response.status === 401) {
+          message = ERROR_MESSAGES.UNAUTHORIZED
+        } else if (response.status === 403) {
+          message = ERROR_MESSAGES.FORBIDDEN
+        }
+        
+        throw new MetApiError(message, response.status)
       }
 
       let data: T
@@ -86,7 +96,7 @@ export async function fetchApi<T>(
         data = await response.json()
       } catch {
         throw new MetApiError(
-          ERROR_MESSAGES.GENERIC,
+          ERROR_MESSAGES.BAD_REQUEST,
           response.status
         )
       }
@@ -108,9 +118,19 @@ export async function fetchApi<T>(
 
   clearTimeout(timeoutId)
 
-  throw new MetApiError(
-    ERROR_MESSAGES.GENERIC,
-    undefined,
-    lastError
-  )
+  if (lastError instanceof MetApiError) {
+    throw lastError
+  }
+
+  const isTimeout = lastError?.name === 'AbortError'
+  const isNetwork = lastError instanceof TypeError && lastError.message.includes('fetch')
+  
+  let message: string = ERROR_MESSAGES.GENERIC
+  if (isTimeout) {
+    message = ERROR_MESSAGES.TIMEOUT
+  } else if (isNetwork) {
+    message = ERROR_MESSAGES.NETWORK
+  }
+
+  throw new MetApiError(message, undefined, lastError)
 }

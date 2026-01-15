@@ -12,7 +12,7 @@ import { AddToCollection } from '@/components/features/addToCollection'
 import { SimilarArtworks } from '@/components/features/similarArtworks'
 import { useArtworkDetail } from '@/lib/hooks/useArtworkDetail'
 import { sanitizeImageUrl, formatArtworkDate } from '@/lib/utils/formatters'
-import { ERROR_MESSAGES } from '@/lib/constants/config'
+import { getErrorMessage } from '@/lib/utils/error-handler'
 
 interface ArtworkDetailViewProps {
   artworkId: number
@@ -23,18 +23,20 @@ interface ArtworkDetailViewProps {
  */
 export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
   const router = useRouter()
-  const { data: artwork, isLoading, isError, refetch } = useArtworkDetail(artworkId)
+  const { data: artwork, isLoading, isError, error, refetch } = useArtworkDetail(artworkId)
 
   if (isLoading) {
     return <ArtworkDetailSkeleton />
   }
 
   if (isError || !artwork) {
+    const errorInfo = getErrorMessage(error)
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorState
-          message={ERROR_MESSAGES.GENERIC}
-          onRetry={() => refetch()}
+          title={errorInfo.title}
+          message={errorInfo.message}
+          onRetry={errorInfo.isRetryable ? () => refetch() : undefined}
         />
       </div>
     )
