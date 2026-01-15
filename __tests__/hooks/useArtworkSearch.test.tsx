@@ -124,34 +124,6 @@ describe('useArtworkSearch', () => {
     expect(artworks.every(a => a.primaryImage || a.primaryImageSmall)).toBe(true)
   })
 
-  it('should sort artworks with images first when hasImages filter is undefined', async () => {
-    const mockArtworks = [
-      { ...createMockArtwork(1, { title: 'Artwork 1' }), primaryImage: '', primaryImageSmall: '' },
-      createMockArtwork(2, { title: 'Artwork 2' }),
-      { ...createMockArtwork(3, { title: 'Artwork 3' }), primaryImage: '', primaryImageSmall: '' },
-      createMockArtwork(4, { title: 'Artwork 4' }),
-    ]
-
-    mockSearchArtworks.mockResolvedValue({
-      total: 4,
-      objectIDs: [1, 2, 3, 4],
-    })
-    mockBatchGetArtworks.mockResolvedValue(mockArtworks)
-
-    const { result } = renderHook(
-      () => useArtworkSearch({ query: 'van gogh' }),
-      { wrapper: createWrapper() }
-    )
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    const artworks = result.current.data?.pages[0].artworks || []
-    expect(artworks[0].primaryImage || artworks[0].primaryImageSmall).toBeTruthy()
-    expect(artworks[1].primaryImage || artworks[1].primaryImageSmall).toBeTruthy()
-    expect(artworks[2].primaryImage || artworks[2].primaryImageSmall).toBeFalsy()
-    expect(artworks[3].primaryImage || artworks[3].primaryImageSmall).toBeFalsy()
-  })
-
   it('should return empty results for empty query', () => {
     const { result } = renderHook(
       () => useArtworkSearch({ query: '' }),

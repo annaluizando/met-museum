@@ -44,7 +44,7 @@ describe('useFeaturedArtworks', () => {
 
     // Should call with the featured artwork IDs
     expect(mockBatchGetArtworks).toHaveBeenCalledWith([
-      436535, 459055, 438817, 436105, 437133, 436528, 437894, 459080
+      436535, 459055, 438817, 436105, 436965, 436528, 437894, 459080
     ])
     expect(result.current.data).toHaveLength(3)
     expect(result.current.data?.[0].objectID).toBe(436535)
