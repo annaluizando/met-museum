@@ -30,13 +30,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const mockArtwork: ArtworkObject = {
-  objectID: 437133,
+  objectID: 436528,
   isHighlight: true,
-  accessionNumber: '1993.132',
-  accessionYear: '1993',
+  accessionNumber: '58.187',
+  accessionYear: '1890',
   isPublicDomain: true,
-  primaryImage: 'https://images.metmuseum.org/CRDImages/ep/original/DT1567.jpg',
-  primaryImageSmall: 'https://images.metmuseum.org/CRDImages/ep/web-large/DT1567.jpg',
+  primaryImage: 'https://images.metmuseum.org/CRDImages/ep/original/DP346474.jpg',
+  primaryImageSmall: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP346474.jpg',
   additionalImages: [],
   constituents: null,
   department: 'European Paintings',
