@@ -1,7 +1,7 @@
 import type { Preview } from '@storybook/nextjs-vite';
+import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '../app/globals.css';
-import React from 'react';
 
 // Create a QueryClient instance for Storybook
 const queryClient = new QueryClient({
@@ -14,14 +14,14 @@ const queryClient = new QueryClient({
 });
 
 // Wrapper component to provide React Query context
-const withQueryProvider = (Story: any) => (
+const withQueryProvider = (Story: React.ComponentType) => (
   <QueryClientProvider client={queryClient}>
     <Story />
   </QueryClientProvider>
 );
 
 // Wrapper component to handle theme class on html element
-const withTheme = (Story: any) => {
+const withTheme = (Story: React.ComponentType) => {
   // Initialize theme on mount
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('theme') || 'system';
@@ -52,6 +52,11 @@ const preview: Preview = {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
+      expanded: true,
+      sort: 'requiredFirst',
+    },
+    actions: {
+      argTypesRegex: '^on[A-Z].*',
     },
     backgrounds: {
       default: 'light',
@@ -81,6 +86,31 @@ const preview: Preview = {
     },
     nextjs: {
       appDirectory: true,
+    },
+    viewport: {
+      viewports: {
+        mobile: {
+          name: 'Mobile',
+          styles: {
+            width: '375px',
+            height: '667px',
+          },
+        },
+        tablet: {
+          name: 'Tablet',
+          styles: {
+            width: '768px',
+            height: '1024px',
+          },
+        },
+        desktop: {
+          name: 'Desktop',
+          styles: {
+            width: '1280px',
+            height: '800px',
+          },
+        },
+      },
     },
   },
   decorators: [withTheme, withQueryProvider],
