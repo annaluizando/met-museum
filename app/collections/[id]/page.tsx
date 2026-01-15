@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CollectionDetailView } from './collection-detail-view'
+import { CollectionDetailView } from './collectionDetailView'
 
 interface CollectionPageProps {
   params: Promise<{ id: string }>

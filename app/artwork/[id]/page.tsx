@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { ArtworkDetailView } from './artwork-detail-view'
+import { ArtworkDetailView } from './artworkDetailView'
 import { getArtworkById } from '@/lib/api/artworks'
 import { artworkIdSchema } from '@/lib/validations/artwork'
 
