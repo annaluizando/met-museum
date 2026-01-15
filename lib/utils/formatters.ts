@@ -40,8 +40,6 @@ export function sanitizeImageUrl(url: string | null | undefined): string | null 
   
   try {
     const parsed = new URL(url)
-    // TO-DO: Really needed?
-    // Only allow https protocol
     if (parsed.protocol !== 'https:') return null
     return url
   } catch {
