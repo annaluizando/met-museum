@@ -1,6 +1,6 @@
 # MetMuseum Explorer 🎨
 
-A modern, accessible web application for exploring The Metropolitan Museum of Art's collection of over 470,000 artworks. Built with Next.js 15, React Query, Zustand, and TypeScript.
+A modern, accessible web application for exploring The Metropolitan Museum of Art's collection of over 470,000 artworks. Built with Next.js, React Query, Zustand, and TypeScript.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.1-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -11,20 +11,25 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 ## 🌟 Features
 
 ### Core Functionality
-- **🔍 Advanced Search**: Search artworks by title, artist, culture, or time period with real-time results
+- **🔍 Advanced Search**: Search artworks by title, artist, culture, or time period with real-time results and filters
 - **♾️ Infinite Scroll**: Seamless pagination with automatic loading as you scroll
 - **🎯 Artwork Details**: Comprehensive metadata including artist, date, medium, dimensions, and tags
+- **🖼️ Image Viewer**: Full-screen modal for viewing high-resolution artwork images
+- **🔗 Similar Artworks**: Discover related artworks with carousel navigation
+- **⭐ Featured Artworks**: Curated featured collection on the homepage
 - **📚 Collections Management**: Create, edit, and delete personal art collections with persistent storage
 - **👁️ View Modes**: Toggle between grid and list views for optimal browsing experience
+- **🌓 Theme Toggle**: Dark and light mode support
 - **📱 Responsive Design**: Fully responsive from mobile to desktop
 
 ### Technical Highlights
 - **Type-Safe**: Strict TypeScript with comprehensive type definitions
 - **Accessible**: WCAG-compliant with proper ARIA labels and keyboard navigation
 - **Performant**: Optimized with React Query caching, skeleton loaders, and code splitting
-- **Well-Tested**: Unit and integration tests with Jest and React Testing Library
-- **Documented**: Storybook stories for all major components
+- **Well-Tested**: Unit and integration tests with Jest, and React Testing Library
+- **Documented**: Storybook stories for all major components with Vitest integration
 - **SEO-Friendly**: Dynamic metadata and proper semantic HTML
+- **Search History**: Persistent search history for quick access to recent searches
 
 ## 📋 Table of Contents
 
@@ -89,8 +94,8 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 ## 🛠️ Tech Stack
 
 ### Core
-- **[Next.js 16](https://nextjs.org/)** - React framework with App Router
-- **[React 19](https://react.dev/)** - UI library
+- **[Next.js 16.1.1](https://nextjs.org/)** - React framework with App Router
+- **[React 19.2.3](https://react.dev/)** - UI library
 - **[TypeScript 5](https://www.typescriptlang.org/)** - Type safety
 
 ### State Management
@@ -103,8 +108,9 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 - **[Lucide React](https://lucide.dev/)** - Icon library
 
 ### Development Tools
-- **[Storybook](https://storybook.js.org/)** - Component documentation
+- **[Storybook 10.1.11](https://storybook.js.org/)** - Component documentation with Next.js Vite framework
 - **[Jest](https://jestjs.io/)** - Unit testing
+- **[Vitest](https://vitest.dev/)** - Fast unit testing with Vite
 - **[React Testing Library](https://testing-library.com/)** - Component testing
 - **[ESLint](https://eslint.org/)** - Code linting
 
@@ -112,7 +118,7 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 
 ### Prerequisites
 
-- Node.js 18.17 or higher
+- Node.js 20 or higher
 - npm, yarn, or pnpm
 
 ### Installation
@@ -159,30 +165,41 @@ metmuseum/
 ├── app/                          # Next.js App Router
 │   ├── artwork/[id]/            # Dynamic artwork detail page
 │   │   ├── page.tsx             # Server component with metadata
-│   │   └── artwork-detail-view.tsx  # Client component
+│   │   └── artworkDetailView.tsx  # Client component
 │   ├── collections/             # Collections page
 │   ├── layout.tsx               # Root layout with providers
 │   ├── page.tsx                 # Home page (search)
 │   └── globals.css              # Global styles
 ├── components/
 │   ├── features/                # Feature-specific components
-│   │   ├── artwork-card.tsx     # Artwork display card
-│   │   ├── artwork-grid.tsx     # Grid with infinite scroll
-│   │   ├── search-bar.tsx       # Search input with debounce
-│   │   ├── collection-form.tsx  # CRUD form
-│   │   ├── collection-list.tsx  # Collection management
-│   │   ├── empty-state.tsx      # Empty state component
-│   │   └── error-state.tsx      # Error state component
+│   │   ├── artworkCard.tsx     # Artwork display card
+│   │   ├── artworkCardSkeleton.tsx # Loading skeleton
+│   │   ├── artworkGrid.tsx     # Grid with infinite scroll
+│   │   ├── searchBar.tsx        # Search input with debounce
+│   │   ├── searchFilters.tsx   # Search filter controls
+│   │   ├── collectionForm.tsx  # CRUD form
+│   │   ├── collectionList.tsx  # Collection management
+│   │   ├── emptyState.tsx       # Empty state component
+│   │   ├── errorState.tsx       # Error state component
+│   │   ├── featuredArtworks.tsx # Featured artworks display
+│   │   ├── imageViewer.tsx      # Image viewer modal
+│   │   ├── similarArtworks.tsx  # Similar artworks carousel
+│   │   └── addToCollection.tsx # Add artwork to collection
 │   ├── layouts/                 # Layout components
 │   │   ├── header.tsx           # App header
 │   │   └── footer.tsx           # App footer
 │   └── ui/                      # Base UI components (shadcn)
 │       ├── button.tsx
 │       ├── card.tsx
+│       ├── carousel.tsx
+│       ├── checkbox.tsx
+│       ├── confirmDialog.tsx
 │       ├── input.tsx
 │       ├── label.tsx
+│       ├── select.tsx
 │       ├── skeleton.tsx
-│       └── textarea.tsx
+│       ├── textarea.tsx
+│       └── themeToggle.tsx
 ├── lib/
 │   ├── api/                     # API layer
 │   │   ├── client.ts            # Fetch wrapper with retry logic
@@ -193,20 +210,25 @@ metmuseum/
 │   ├── hooks/                   # Custom React hooks
 │   │   ├── use-artwork-search.ts   # Infinite scroll search
 │   │   ├── use-artwork-detail.ts   # Artwork details
-│   │   └── use-departments.ts      # Departments list
+│   │   ├── useDepartments.ts      # Departments list
+│   │   ├── useFeaturedArtworks.ts # Featured artworks
+│   │   ├── useSimilarArtworks.ts  # Similar artworks
+│   │   └── useTheme.ts            # Theme management
 │   ├── providers/               # React providers
 │   │   └── query-provider.tsx   # React Query provider
 │   ├── stores/                  # Zustand stores
 │   │   ├── collections-store.ts # Collections with persistence
-│   │   └── search-store.ts      # Search state
+│   │   ├── searchStore.ts      # Search state
+│   │   └── searchHistoryStore.ts # Search history
 │   ├── types/                   # TypeScript types
 │   │   └── artwork.ts           # Met API type definitions
 │   └── utils/                   # Utility functions
 │       ├── cn.ts                # Class name merger
-│       └── formatters.ts        # Data formatters
+│       ├── formatters.ts        # Data formatters
+│       └── sanitize.ts          # HTML sanitization utilities
 ├── stories/                     # Storybook stories
-│   ├── Button.stories.tsx
 │   ├── ArtworkCard.stories.tsx
+│   ├── ArtworkGrid.stories.tsx
 │   ├── EmptyState.stories.tsx
 │   └── ErrorState.stories.tsx
 ├── __tests__/                   # Test files
@@ -214,10 +236,13 @@ metmuseum/
 │   ├── stores/
 │   └── utils/
 ├── .storybook/                  # Storybook config
+│   └── main.ts                  # Storybook configuration (Next.js Vite)
 ├── .cursorrules                 # Project coding standards
 ├── jest.config.js               # Jest configuration
-├── jest.setup.js                # Jest setup
-└── tsconfig.json                # TypeScript config
+├── jest.setup.ts                # Jest setup
+├── vitest.config.ts            # Vitest configuration
+├── tsconfig.json                # TypeScript config
+└── tsconfig.test.json           # TypeScript config for tests
 ```
 
 ## 🔑 Key Technical Decisions
@@ -297,55 +322,33 @@ const artworks = await Promise.all(
 
 ## ⚖️ Trade-offs & Future Improvements
 
-### Current Trade-offs
+### Trade-offs
 
 1. **No Virtualization**
    - **Trade-off**: Render all loaded items in DOM
-   - **Impact**: Memory usage increases with many items
-   - **Future**: Implement `react-virtuoso` for large lists
    
-2. **No Advanced Filtering**
-   - **Trade-off**: Basic search only (query string)
-   - **Impact**: Can't filter by multiple criteria simultaneously
-   - **Future**: Add filter UI for department, date range, medium, etc.
-
-3. **No Image Optimization Pipeline**
+2. **No Image Optimization Pipeline**
    - **Trade-off**: Using Met's images directly
-   - **Impact**: Inconsistent image sizes/quality
-   - **Future**: Implement Next.js Image optimization with blur placeholders
 
-4. **No Offline Support**
-   - **Trade-off**: Requires internet connection
-   - **Impact**: No functionality when offline
-   - **Future**: Service Worker for offline caching
-
-5. **No User Authentication**
+3. **No User Authentication**
    - **Trade-off**: Collections only stored locally
-   - **Impact**: Collections don't sync across devices
-   - **Future**: Add authentication and cloud storage
 
-### Planned Improvements
+4. **No advanced logging service for debugging, like Sentry**
+   - **Trade-off**: 
 
-#### High Priority
-- [ ] Add advanced search filters UI (department, date range, medium)
-- [ ] Implement artwork comparison feature
+5. **No search bar in collections**
+   - **Trade-off**: If user has many collections, it can take a while to find all
+
+6. **No e2e tests**
+   - **Trade-off**: No testing of all application flows
+
+### Improvements
+
 - [ ] Add share functionality (social media, link sharing)
-- [ ] Implement artwork favorites/bookmarks
-- [ ] Add search history
-
-#### Medium Priority
 - [ ] Virtual scrolling for better performance
-- [ ] Image zoom functionality
 - [ ] Export collections (PDF, JSON)
-- [ ] Dark mode support
-- [ ] Progressive Web App (PWA) features
-
-#### Nice to Have
-- [ ] Similar artworks recommendations
 - [ ] Timeline view for artworks
-- [ ] 3D/AR view for sculptures
 - [ ] Multi-language support
-- [ ] Print-friendly view
 
 ## 🧪 Testing
 
@@ -364,17 +367,10 @@ npm test -- --coverage
 
 ### Test Coverage
 
-- **Unit Tests**: Utility functions, formatters
-- **Component Tests**: UI components with user interactions
-- **Store Tests**: Zustand store actions and state updates
-- **Integration Tests**: Search flow, collection CRUD
-
-### Testing Philosophy
-
-1. **Accessibility First**: Use semantic queries (getByRole, getByLabelText)
-2. **User Behavior**: Test how users interact, not implementation details
-3. **Real Scenarios**: Test complete user flows
-4. **Mock Strategically**: Mock only external dependencies (API, localStorage)
+- **Unit Tests**: Utility functions, formatters (Jest)
+- **Component Tests**: UI components with user interactions (Jest + React Testing Library)
+- **Store Tests**: Zustand store actions and state updates (Jest)
+- **Storybook Tests**: Component tests via Vitest addon
 
 ## 📚 Storybook
 
@@ -388,45 +384,25 @@ Visit [http://localhost:6006](http://localhost:6006)
 
 ### What's Documented
 
-1. **UI Components**: Button, Input, Card, Skeleton
-2. **Feature Components**: ArtworkCard, EmptyState, ErrorState
-3. **All Visual States**: Default, Loading, Error, Empty, With Data
-4. **Interactive Controls**: Modify props in real-time
-5. **Accessibility Tests**: Built-in a11y addon
+1. **Feature Components**: ArtworkCard, ArtworkGrid, EmptyState, ErrorState
+2. **All Visual States**: Default, Loading, Error, Empty, With Data
+3. **Interactive Controls**: Modify props in real-time
+4. **Vitest Integration**: Run component tests directly in Storybook
 
 ## 🎯 Performance Optimizations
 
 ### Implemented
 
 1. **React Query Caching**: 5-minute stale time, aggressive caching
-2. **Debounced Search**: 300ms debounce to reduce API calls
+2. **Debounced Search**: 600ms debounce to reduce API calls
 3. **Image Lazy Loading**: Below-the-fold images load on demand
 4. **Code Splitting**: Dynamic imports for large components
 5. **Optimistic UI**: Instant feedback for collection updates
 6. **Request Deduplication**: Prevents duplicate API calls
 7. **Skeleton Screens**: Better perceived performance
-
-### Metrics (Target)
-
-- First Contentful Paint: < 1.5s
-- Time to Interactive: < 3.5s
-- Lighthouse Score: > 90
-
-## 🔒 Security Considerations
-
-### Implemented
-
-1. **Input Sanitization**: All user inputs validated/sanitized
-2. **URL Validation**: Only HTTPS images allowed
-3. **XSS Prevention**: React's built-in escaping
-4. **HTTPS Only**: Enforce secure connections
-5. **API Rate Limiting**: Respect Met API limits (80 req/sec)
-6. **No Sensitive Data**: No API keys or secrets in client code
-
-TODO:
-- fix search
-- fix image loading on full artwork page
-- ensure zoom in image is working
-- test collections, see if its saving locally, if they work properly
-- improve search, make it have specific filters for advanced search 
-- fix storybook
+8. **Image Viewer**: Modal for viewing high-resolution artwork images
+9. **Similar Artworks**: Carousel showing related artworks
+10. **Featured Artworks**: Curated featured collection on homepage
+11. **Search History**: Persistent search history with Zustand
+12. **Theme Toggle**: Dark/light mode support
+13. **BFF (Backend for Frontend)** pattern
