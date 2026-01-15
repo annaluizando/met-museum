@@ -134,7 +134,7 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     <div 
       className={`
         overflow-hidden transition-all duration-300 ease-in-out
-        ${isOpen ? 'max-h-[600px] opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}
+        ${isOpen ? 'opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'}
       `}
     >
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-950 shadow-sm">
@@ -156,7 +156,7 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
         </div>
 
         {/* Filter Controls */}
-        <div className="p-4 space-y-5 max-h-[500px] overflow-y-auto">
+        <div className="p-4 space-y-5 overflow-y-auto">
           {/* Filter Grid - 2 columns on larger screens */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Department Filter */}
