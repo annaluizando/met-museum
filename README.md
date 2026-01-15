@@ -134,17 +134,13 @@ cd met-museum
 npm install
 ```
 
-3. Create environment file (optional - uses default Met API):
-```bash
-cp .env.example .env.local
-```
-
-4. Run the development server:
+3. Run the development server:
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. All set!
 
 ### Available Scripts
 
