@@ -5,6 +5,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Header } from "@/components/layouts/header";
 import { Footer } from "@/components/layouts/footer";
+import { ScrollToTop } from "@/components/ui/scrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <ScrollToTop />
         </QueryProvider>
       </body>
     </html>
