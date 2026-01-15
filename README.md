@@ -319,23 +319,17 @@ const artworks = await Promise.all(
 ## ⚖️ Trade-offs & Future Improvements
 
 ### Trade-offs
-
-1. **No Virtualization**
-   - **Trade-off**: Render all loaded items in DOM
    
-2. **No Image Optimization Pipeline**
-   - **Trade-off**: Using Met's images directly
-
-3. **No User Authentication**
+1. **No User Authentication**
    - **Trade-off**: Collections only stored locally
 
-4. **No advanced logging service for debugging, like Sentry**
+2. **No advanced logging service for debugging, like Sentry**
    - **Trade-off**: 
 
-5. **No search bar in collections**
+3. **No search bar in collections**
    - **Trade-off**: If user has many collections, it can take a while to find all
 
-6. **No e2e tests**
+4. **No e2e tests**
    - **Trade-off**: No testing of all application flows
 
 ### Improvements
