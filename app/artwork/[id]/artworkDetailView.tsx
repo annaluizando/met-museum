@@ -43,6 +43,9 @@ export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
   }
 
   const imageUrl = sanitizeImageUrl(artwork.primaryImage || artwork.primaryImageSmall)
+  const placeholderImageUrl = artwork.primaryImage && artwork.primaryImageSmall 
+    ? (sanitizeImageUrl(artwork.primaryImageSmall) ?? undefined)
+    : undefined
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -66,6 +69,7 @@ export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
                 src={imageUrl}
                 alt={artwork.title || 'Artwork image'}
                 title={`${artwork.title || 'Untitled'} ${artwork.artistDisplayName ? `by ${artwork.artistDisplayName}` : ''}`}
+                placeholderSrc={placeholderImageUrl}
               />
               {artwork.isPublicDomain && (
                 <div className="absolute top-4 right-0 bg-green-600 text-white px-3 py-1.5 rounded-bl-lg rounded-tl-lg font-medium text-sm z-10 pointer-events-none">

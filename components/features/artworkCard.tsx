@@ -36,6 +36,15 @@ export function ArtworkCard({ artwork, viewMode = 'grid' }: ArtworkCardProps) {
           isListView && "hover:scale-100"
         )}
         aria-label={`View details for ${artwork.title} by ${artwork.artistDisplayName || 'Unknown Artist'}`}
+        onMouseEnter={() => {
+          if (artwork.primaryImage && artwork.primaryImageSmall) {
+            const link = document.createElement('link')
+            link.rel = 'prefetch'
+            link.as = 'image'
+            link.href = artwork.primaryImage
+            document.head.appendChild(link)
+          }
+        }}
       >
         <Card className={cn(
           "overflow-hidden h-full transition-all duration-300 ease-in-out hover:shadow-lg flex flex-col",

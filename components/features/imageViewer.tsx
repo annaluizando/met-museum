@@ -11,13 +11,14 @@ interface ImageViewerProps {
   src: string
   alt: string
   title?: string
+  placeholderSrc?: string
 }
 
 /**
  * Image viewer with fullscreen and zoom capabilities
  * Implements keyboard navigation (Escape, +/-, scroll wheel)
  */
-export function ImageViewer({ src, alt, title }: ImageViewerProps) {
+export function ImageViewer({ src, alt, title, placeholderSrc }: ImageViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -25,6 +26,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(true)
+  const [isPlaceholderLoaded, setIsPlaceholderLoaded] = useState(false)
   const fullscreenDialogRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const previousActiveElementRef = useRef<HTMLElement | null>(null)
@@ -111,8 +113,8 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
       {/* Thumbnail with fullscreen button */}
       <div className="relative group w-full h-full">
         {/* Loading skeleton */}
-        {isImageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800">
+        {isImageLoading && !isPlaceholderLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 z-10">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 text-zinc-400 dark:text-zinc-600 animate-spin" aria-hidden="true" />
               <p className="text-sm text-zinc-500 dark:text-zinc-500">Loading image...</p>
@@ -120,16 +122,35 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
           </div>
         )}
         
+        {/* Placeholder image (small, loads first) */}
+        {placeholderSrc && (
+          <Image
+            src={placeholderSrc}
+            alt={alt}
+            fill
+            className={cn(
+              "object-contain transition-opacity duration-300",
+              isPlaceholderLoaded && !isImageLoading ? "opacity-100" : "opacity-0"
+            )}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+            quality={75}
+            onLoad={() => setIsPlaceholderLoaded(true)}
+          />
+        )}
+        
+        {/* Full resolution image */}
         <Image
           src={src}
           alt={alt}
           fill
           className={cn(
-            "object-contain transition-opacity duration-300",
+            "object-contain transition-opacity duration-500",
             isImageLoading ? "opacity-0" : "opacity-100"
           )}
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
+          quality={90}
           onLoad={() => setIsImageLoading(false)}
           onError={() => setIsImageLoading(false)}
         />
@@ -260,16 +281,41 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
               })
             }}
           >
-            {/* Loading skeleton for fullscreen */}
+            {/* Placeholder image for fullscreen */}
+            {placeholderSrc && (
+              <div
+                className={cn(
+                  "absolute inset-0 transition-all duration-200 ease-out",
+                  isFullscreenImageLoading ? "opacity-100" : "opacity-0"
+                )}
+                style={{
+                  transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+                  width: '90vw',
+                  height: '90vh',
+                }}
+              >
+                <Image
+                  src={placeholderSrc}
+                  alt={alt}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  quality={75}
+                />
+              </div>
+            )}
+            
+            {/* Loading indicator for fullscreen */}
             {isFullscreenImageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="w-10 h-10 text-white animate-spin" aria-hidden="true" />
-                  <p className="text-sm text-white/80">Loading...</p>
+                  <p className="text-sm text-white/80">Loading full resolution...</p>
                 </div>
               </div>
             )}
             
+            {/* Full resolution image for fullscreen */}
             <div
               className={cn(
                 "relative transition-all duration-200 ease-out",
@@ -286,7 +332,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
                 alt={alt}
                 fill
                 className={cn(
-                  "object-contain transition-opacity duration-300",
+                  "object-contain transition-opacity duration-500",
                   isFullscreenImageLoading ? "opacity-0" : "opacity-100"
                 )}
                 sizes="100vw"
