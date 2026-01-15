@@ -461,9 +461,8 @@ export function SearchBar() {
               </div>
               <div className="py-1">
                 {filteredHistory.map((item, index) => (
-                  <button
+                  <div
                     key={item.timestamp}
-                    type="button"
                     onClick={() => handleHistorySelect(item.query)}
                     onMouseEnter={() => setFocusedHistoryIndex(index)}
                     className={`cursor-pointer w-full px-4 py-2 text-left text-sm flex items-center justify-between group hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
@@ -489,7 +488,7 @@ export function SearchBar() {
                     >
                       <Trash2 className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
                     </Button>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
