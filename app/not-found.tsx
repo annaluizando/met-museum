@@ -17,12 +17,12 @@ export default function NotFound() {
           The page you're looking for doesn't exist or has been moved. 
           Let's get you back to exploring art!
         </p>
-        <Link href="/">
-          <Button size="lg">
+        <Button asChild size="lg">
+          <Link href="/">
             <Home className="w-5 h-5 mr-2" aria-hidden="true" />
             Back to Home
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </div>
   )
