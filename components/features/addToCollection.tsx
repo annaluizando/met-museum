@@ -48,7 +48,6 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   const handleRemoveFromCollection = (collectionId: string) => {
     removeArtworkFromCollection(collectionId, artworkId)
     onSuccess?.()
-    // Don't close the modal so user can add/remove from multiple collections
   }
 
   const handleCreateNew = () => {
@@ -56,10 +55,8 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   }
 
   const handleCollectionCreated = (collectionId: string) => {
-    // Automatically add artwork to the newly created collection
     addArtworkToCollection(collectionId, artworkId)
     setIsCreating(false)
-    // Keep modal open so user can add to more collections
     onSuccess?.()
   }
 
