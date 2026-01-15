@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { Plus, X, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Toast } from '@/components/ui/toast'
 import { useCollectionsStore } from '@/lib/stores/collections-store'
 import { CollectionForm } from './collectionForm'
 
@@ -23,6 +24,7 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   const [isOpen, setIsOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -54,8 +56,18 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   }
 
   const handleCollectionCreated = (collectionId: string) => {
+    const { collections: currentCollections } = useCollectionsStore.getState()
+    const collection = currentCollections.find(c => c.id === collectionId)
+    
     addArtworkToCollection(collectionId, artworkId)
     setIsCreating(false)
+    
+    if (collection) {
+      setToastMessage(`"${artworkTitle || 'Artwork'}" has been added to "${collection.name}"`)
+    } else {
+      setToastMessage(`"${artworkTitle || 'Artwork'}" has been added to the new collection`)
+    }
+    
     onSuccess?.()
   }
 
@@ -241,6 +253,13 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
     <>
       {button}
       {(isOpen || isCreating) && createPortal(modalContent, document.body)}
+      {toastMessage && createPortal(
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />,
+        document.body
+      )}
     </>
   )
 }
