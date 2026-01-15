@@ -10,6 +10,7 @@ import { FeaturedArtworks } from './featuredArtworks'
 import { VirtualizedArtworkList } from './virtualizedArtworkList'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { useSearchStore } from '@/lib/stores/search-store'
+import { hasActiveFilters } from '@/lib/utils/filters'
 import { UI_CONFIG } from '@/lib/constants/config'
 import { cn } from '@/lib/utils/cn'
 
@@ -34,7 +35,7 @@ export function ArtworkGrid() {
   } = useArtworkSearch({
     query,
     filters,
-    enabled: query.trim().length > 0,
+    enabled: query.trim().length > 0 || hasActiveFilters(filters),
   })
 
   const artworks = data?.pages.flatMap(page => page.artworks) || []
@@ -99,7 +100,10 @@ export function ArtworkGrid() {
     )
   }
 
-  if (!query.trim()) {
+  const hasQuery = query.trim().length > 0
+  const hasFilters = hasActiveFilters(filters)
+  
+  if (!hasQuery && !hasFilters) {
     return <FeaturedArtworks />
   }
 

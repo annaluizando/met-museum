@@ -2,6 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { searchArtworks, batchGetArtworks } from '@/lib/api/artworks'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
 import { PAGINATION, REACT_QUERY_CONFIG } from '@/lib/constants/config'
+import { hasActiveFilters } from '@/lib/utils/filters'
 import type { SearchFilters, ArtworkObject } from '@/lib/types/artwork'
 
 interface UseArtworkSearchOptions {
@@ -19,17 +20,13 @@ export function useArtworkSearch({
   filters, 
   enabled = true 
 }: UseArtworkSearchOptions) {
+  const hasQuery = query.trim().length > 0
+  const hasFilters = hasActiveFilters(filters)
+  const shouldEnable = hasQuery || hasFilters
+
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.ARTWORKS.INFINITE(query, filters),
     queryFn: async ({ pageParam = 0 }) => {
-      if (!query.trim()) {
-        return {
-          artworks: [],
-          nextOffset: undefined,
-          hasMore: false,
-        }
-      }
-
       const searchResults = await searchArtworks(query, filters)
       
       if (!searchResults.objectIDs || searchResults.objectIDs.length === 0) {
@@ -57,16 +54,14 @@ export function useArtworkSearch({
         ? validArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
         : validArtworks
 
-      const sortedArtworks = filters?.hasImages === undefined
-        ? filteredArtworks.sort((a, b) => {
-            const aHasImage = !!(a.primaryImage || a.primaryImageSmall)
-            const bHasImage = !!(b.primaryImage || b.primaryImageSmall)
-            
-            if (aHasImage === bHasImage) return 0
-            if (aHasImage && !bHasImage) return -1
-            return 1
-          })
-        : filteredArtworks
+      const sortedArtworks = filteredArtworks.sort((a, b) => {
+        const aHasImage = !!(a.primaryImage || a.primaryImageSmall)
+        const bHasImage = !!(b.primaryImage || b.primaryImageSmall)
+        
+        if (aHasImage === bHasImage) return 0
+        if (aHasImage && !bHasImage) return -1
+        return 1
+      })
 
       const hasMore = endIndex < searchResults.objectIDs.length
 
@@ -78,7 +73,7 @@ export function useArtworkSearch({
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextOffset,
-    enabled: enabled && query.trim().length > 0,
+    enabled: enabled && shouldEnable,
     staleTime: REACT_QUERY_CONFIG.STALE_TIME,
     retry: REACT_QUERY_CONFIG.RETRY,
     refetchOnWindowFocus: REACT_QUERY_CONFIG.REFETCH_ON_WINDOW_FOCUS,

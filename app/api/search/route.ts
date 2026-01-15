@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { API_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 import { searchQuerySchema, searchFiltersSchema } from '@/lib/validations/search'
 import { sanitizeSearchQuery, sanitizeString, sanitizeNumber, sanitizeBoolean } from '@/lib/utils/sanitize'
+import { hasActiveFilters } from '@/lib/utils/filters'
+import type { SearchFilters } from '@/lib/types/artwork'
 
 /**
  * Route Handler: Proxy for searching artworks
@@ -16,10 +18,10 @@ export async function GET(request: NextRequest) {
     const sanitizedQuery = sanitizeSearchQuery(rawQuery)
     const queryResult = searchQuerySchema.safeParse(sanitizedQuery)
     
-    if (!queryResult.success || !sanitizedQuery) {
+    if (!queryResult.success) {
       console.error('Search query validation failed:', {
         query: sanitizedQuery,
-        errors: queryResult.success ? undefined : queryResult.error.issues,
+        errors: queryResult.error.issues,
       })
       
       return NextResponse.json(
@@ -96,7 +98,22 @@ export async function GET(request: NextRequest) {
     const filtersResult = searchFiltersSchema.safeParse(filters)
     const validatedFilters = filtersResult.success ? filtersResult.data : {}
     const params = new URLSearchParams()
-    params.append('q', queryResult.data)
+    
+    const hasQuery = queryResult.data && queryResult.data.length > 0
+    const hasFilters = hasActiveFilters(validatedFilters as SearchFilters)
+    
+    if (!hasQuery && !hasFilters) {
+      return NextResponse.json(
+        { error: 'Either a search query or filters must be provided' },
+        { status: 400 }
+      )
+    }
+    
+    if (hasQuery) {
+      params.append('q', queryResult.data)
+    } else if (hasFilters) {
+      params.append('q', 'a')
+    }
     
     if (validatedFilters.departmentId) {
       params.append('departmentId', validatedFilters.departmentId.toString())
@@ -113,8 +130,10 @@ export async function GET(request: NextRequest) {
     if (validatedFilters.dateEnd !== undefined) {
       params.append('dateEnd', validatedFilters.dateEnd.toString())
     }
-    if (validatedFilters.hasImages !== undefined) {
-      params.append('hasImages', validatedFilters.hasImages.toString())
+    if (validatedFilters.hasImages === false) {
+      params.append('hasImages', 'false')
+    } else {
+      params.append('hasImages', 'true')
     }
     if (validatedFilters.isHighlight !== undefined) {
       params.append('isHighlight', validatedFilters.isHighlight.toString())
@@ -122,7 +141,7 @@ export async function GET(request: NextRequest) {
     if (validatedFilters.isOnView !== undefined) {
       params.append('isOnView', validatedFilters.isOnView.toString())
     }
-
+    
     const url = `${API_CONFIG.BASE_URL}/search?${params.toString()}`
     
     const response = await fetch(url, {

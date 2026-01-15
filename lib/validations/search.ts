@@ -4,9 +4,6 @@ export const searchQuerySchema = z
   .string()
   .max(500, 'Search query must be 500 characters or less')
   .transform((val) => val.trim())
-  .refine((val) => val.length > 0 || val.length === 0, {
-    message: 'Search query cannot be empty',
-  })
 
 export const departmentIdSchema = z
   .number()

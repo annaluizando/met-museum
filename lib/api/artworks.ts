@@ -1,5 +1,6 @@
 import { fetchApi, MetApiError } from './client'
 import { ERROR_MESSAGES } from '@/lib/constants/config'
+import { hasActiveFilters } from '@/lib/utils/filters'
 import type {
   ArtworkObject,
   SearchResponse,
@@ -40,8 +41,19 @@ export async function searchArtworks(
     }
   }
   
+  const hasQuery = queryResult.data && queryResult.data.length > 0
+  const hasFilters = hasActiveFilters(validatedFilters)
+  
+  if (!hasQuery && !hasFilters) {
+    throw new MetApiError(ERROR_MESSAGES.BAD_REQUEST)
+  }
+  
   const params = new URLSearchParams()
-  params.append('q', queryResult.data)
+  if (hasQuery) {
+    params.append('q', queryResult.data)
+  } else if (hasFilters) {
+    params.append('q', 'a')
+  }
   if (validatedFilters?.departmentId) {
     params.append('departmentId', validatedFilters.departmentId.toString())
   }
@@ -51,8 +63,10 @@ export async function searchArtworks(
   if (validatedFilters?.isOnView !== undefined) {
     params.append('isOnView', validatedFilters.isOnView.toString())
   }
-  if (validatedFilters?.hasImages !== undefined) {
-    params.append('hasImages', validatedFilters.hasImages.toString())
+  if (validatedFilters?.hasImages === false) {
+    params.append('hasImages', 'false')
+  } else {
+    params.append('hasImages', 'true')
   }
   if (validatedFilters?.medium) {
     params.append('medium', validatedFilters.medium)
