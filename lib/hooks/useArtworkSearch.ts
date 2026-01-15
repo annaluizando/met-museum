@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { searchArtworks, batchGetArtworks, getDepartments } from '@/lib/api/artworks'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
 import { PAGINATION, REACT_QUERY_CONFIG } from '@/lib/constants/config'
-import { hasActiveFilters } from '@/lib/utils/filters'
+import { hasActiveFilters, filterByHasImages } from '@/lib/utils/filters'
 import type { SearchFilters, ArtworkObject } from '@/lib/types/artwork'
 import type { SortOrder } from '@/lib/stores/search-store'
 
@@ -122,10 +122,7 @@ export function useArtworkSearch({
           typeof artwork.objectID === 'number'
         )
 
-      let filteredArtworks = filters?.hasImages === true
-        ? orderedArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
-        : orderedArtworks
-
+      let filteredArtworks = filterByHasImages(orderedArtworks, filters?.hasImages)
       filteredArtworks = await filterByDepartment(filteredArtworks, filters?.departmentId)
 
       const hasMore = endIndex < totalObjectIDs

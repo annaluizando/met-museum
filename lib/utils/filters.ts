@@ -1,4 +1,4 @@
-import type { SearchFilters } from '@/lib/types/artwork'
+import type { SearchFilters, ArtworkObject } from '@/lib/types/artwork'
 
 /**
  * Check if filters object has any active filters
@@ -17,4 +17,29 @@ export function hasActiveFilters(filters: SearchFilters | undefined): boolean {
     
     return true
   })
+}
+
+/**
+ * Centralized function to check if an artwork has images
+ * Validates that at least one image URL exists
+ */
+export function artworkHasImages(artwork: ArtworkObject): boolean {
+  const primaryImage = artwork.primaryImage
+  const primaryImageSmall = artwork.primaryImageSmall
+  
+  return (
+    (typeof primaryImage === 'string' && primaryImage.length > 0) ||
+    (typeof primaryImageSmall === 'string' && primaryImageSmall.length > 0)
+  )
+}
+
+export function filterByHasImages(
+  artworks: ArtworkObject[],
+  hasImages?: boolean
+): ArtworkObject[] {
+  if (hasImages !== true) {
+    return artworks
+  }
+  
+  return artworks.filter(artwork => artworkHasImages(artwork))
 }

@@ -142,11 +142,6 @@ export async function GET(request: NextRequest) {
       params.append('dateBegin', dateBegin.toString())
       params.append('dateEnd', dateEnd.toString())
     }
-    if (validatedFilters.hasImages === true) {
-      params.append('hasImages', 'true')
-    } else if (validatedFilters.hasImages === false) {
-      params.append('hasImages', 'false')
-    }
     if (validatedFilters.isHighlight !== undefined) {
       params.append('isHighlight', validatedFilters.isHighlight.toString())
     }

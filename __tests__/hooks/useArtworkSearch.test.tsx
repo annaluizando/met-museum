@@ -2,6 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { searchArtworks, batchGetArtworks } from '@/lib/api/artworks'
 import { createWrapper, createMockArtwork } from '@/lib/utils/unit-test'
+import { artworkHasImages } from '@/lib/utils/filters'
 
 jest.mock('@/lib/api/artworks', () => ({
   searchArtworks: jest.fn(),
@@ -121,7 +122,7 @@ describe('useArtworkSearch', () => {
 
     const artworks = result.current.data?.pages[0].artworks || []
     expect(artworks).toHaveLength(2)
-    expect(artworks.every(a => a.primaryImage || a.primaryImageSmall)).toBe(true)
+    expect(artworks.every(a => artworkHasImages(a))).toBe(true)
   })
 
   it('should return empty results for empty query', () => {

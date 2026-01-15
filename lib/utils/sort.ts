@@ -1,9 +1,8 @@
 import type { ArtworkObject } from '@/lib/types/artwork'
 import type { SortOrder } from '@/lib/stores/search-store'
+import { artworkHasImages } from './filters'
 
-const hasImage = (artwork: ArtworkObject): boolean => {
-  return !!(artwork.primaryImage || artwork.primaryImageSmall)
-}
+const hasImage = artworkHasImages
 
 export function sortArtworks(artworks: ArtworkObject[], sortOrder: SortOrder): ArtworkObject[] {
   if (sortOrder === 'relevance') {

@@ -63,11 +63,6 @@ export async function searchArtworks(
   if (validatedFilters?.isOnView !== undefined) {
     params.append('isOnView', validatedFilters.isOnView.toString())
   }
-  if (validatedFilters?.hasImages === true) {
-    params.append('hasImages', 'true')
-  } else if (validatedFilters?.hasImages === false) {
-    params.append('hasImages', 'false')
-  }
   if (validatedFilters?.medium) {
     params.append('medium', validatedFilters.medium)
   }
