@@ -223,27 +223,6 @@ export function ArtworkGrid() {
               Found <span className="font-semibold">{artworks.length}</span> artwork{artworks.length !== 1 ? 's' : ''}
               {hasNextPage && ' (loading more...)'}
             </p>
-            {/* Virtualization indicator badge */}
-            <span 
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
-              title={`Virtualization enabled for ${artworks.length} items (threshold: ${UI_CONFIG.VIRTUALIZATION_THRESHOLD})`}
-            >
-              <svg 
-                className="w-3.5 h-3.5" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M13 10V3L4 14h7v7l9-11h-7z" 
-                />
-              </svg>
-              Virtualized
-            </span>
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="sort-order-virtualized" className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
