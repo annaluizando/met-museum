@@ -21,31 +21,38 @@ const withQueryProvider = (Story: React.ComponentType) => (
 );
 
 // Wrapper component to handle theme class on html element
-const withTheme = (Story: React.ComponentType) => {
-  // Initialize theme on mount
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('theme') || 'system';
-    const root = document.documentElement;
-    
-    if (stored === 'dark') {
-      root.classList.add('dark');
-    } else if (stored === 'light') {
-      root.classList.remove('dark');
-    } else {
-      // System preference
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (isDark) {
+const WithTheme = ({ children }: { children: React.ReactNode }) => {
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('theme') || 'system';
+      const root = document.documentElement;
+      
+      if (stored === 'dark') {
         root.classList.add('dark');
-      } else {
+      } else if (stored === 'light') {
         root.classList.remove('dark');
+      } else {
+        // System preference
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (isDark) {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
       }
     }
-  }
+  }, []);
 
-  return <Story />;
+  return <>{children}</>;
 };
 
-const preview: Preview = {
+const withTheme = (Story: React.ComponentType) => (
+  <WithTheme>
+    <Story />
+  </WithTheme>
+);
+
+export const preview: Preview = {
   parameters: {
     controls: {
       matchers: {

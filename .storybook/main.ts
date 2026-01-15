@@ -7,16 +7,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   stories: [
-    "../stories/**/*.mdx",
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
   addons: [
-    "@storybook/nextjs-vite",
-    "@storybook/addon-vitest",
   ],
   framework: {
     name: "@storybook/nextjs-vite",
-    options: {},
+    options: {
+      nextConfigPath: path.resolve(__dirname, '../next.config.ts'),
+    },
   },
   staticDirs: ["../public"],
   typescript: {
@@ -28,6 +27,12 @@ const config: StorybookConfig = {
     },
   },
   async viteFinal(config) {
+    // Prevent duplicate preview processing
+    const existingAlias = config.resolve?.alias || {};
+    const aliasArray = Array.isArray(existingAlias) 
+      ? existingAlias 
+      : Object.entries(existingAlias).map(([key, value]) => ({ find: key, replacement: value as string }));
+
     return mergeConfig(config, {
       esbuild: {
         jsx: 'automatic',
@@ -36,10 +41,27 @@ const config: StorybookConfig = {
         esbuildOptions: {
           jsx: 'automatic',
         },
+        include: ['react', 'react-dom'],
+        exclude: [],
       },
       resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '../'),
+        alias: [
+          ...aliasArray,
+          {
+            find: '@',
+            replacement: path.resolve(__dirname, '../'),
+          },
+        ],
+        dedupe: ['react', 'react-dom'],
+      },
+      build: {
+        commonjsOptions: {
+          include: [/node_modules/],
+        },
+      },
+      server: {
+        fs: {
+          strict: false,
         },
       },
     });
