@@ -1,9 +1,7 @@
-import React from 'react'
 import { renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { searchArtworks, batchGetArtworks } from '@/lib/api/artworks'
-import type { ArtworkObject } from '@/lib/types/artwork'
+import { createWrapper, createMockArtwork } from '@/lib/utils/unit-test'
 
 jest.mock('@/lib/api/artworks', () => ({
   searchArtworks: jest.fn(),
@@ -12,80 +10,6 @@ jest.mock('@/lib/api/artworks', () => ({
 
 const mockSearchArtworks = searchArtworks as jest.MockedFunction<typeof searchArtworks>
 const mockBatchGetArtworks = batchGetArtworks as jest.MockedFunction<typeof batchGetArtworks>
-
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  })
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
-}
-
-const createMockArtwork = (id: number, title: string): ArtworkObject => ({
-  objectID: id,
-  isHighlight: true,
-  accessionNumber: `${id}`,
-  accessionYear: '1993',
-  isPublicDomain: true,
-  primaryImage: `https://example.com/image-${id}.jpg`,
-  primaryImageSmall: `https://example.com/image-${id}-small.jpg`,
-  additionalImages: [],
-  constituents: null,
-  department: 'European Paintings',
-  objectName: 'Painting',
-  title,
-  culture: '',
-  period: '',
-  dynasty: '',
-  reign: '',
-  portfolio: '',
-  artistRole: 'Artist',
-  artistPrefix: '',
-  artistDisplayName: 'Vincent van Gogh',
-  artistDisplayBio: 'Dutch, 1853–1890',
-  artistSuffix: '',
-  artistAlphaSort: 'Gogh, Vincent van',
-  artistNationality: 'Dutch',
-  artistBeginDate: '1853',
-  artistEndDate: '1890',
-  artistGender: '',
-  artistWikidata_URL: '',
-  artistULAN_URL: '',
-  objectDate: '1889',
-  objectBeginDate: 1889,
-  objectEndDate: 1889,
-  medium: 'Oil on canvas',
-  dimensions: '',
-  measurements: null,
-  creditLine: '',
-  geographyType: '',
-  city: '',
-  state: '',
-  county: '',
-  country: '',
-  region: '',
-  subregion: '',
-  locale: '',
-  locus: '',
-  excavation: '',
-  river: '',
-  classification: 'Paintings',
-  rightsAndReproduction: '',
-  linkResource: '',
-  metadataDate: '',
-  repository: '',
-  objectURL: '',
-  tags: null,
-  objectWikidata_URL: '',
-  isTimelineWork: false,
-  GalleryNumber: '',
-})
 
 describe('useArtworkSearch', () => {
   beforeEach(() => {
@@ -109,7 +33,7 @@ describe('useArtworkSearch', () => {
 
   it('should fetch and return artworks on success', async () => {
     const mockObjectIDs = [1, 2, 3, 4, 5]
-    const mockArtworks = mockObjectIDs.map(id => createMockArtwork(id, `Artwork ${id}`))
+    const mockArtworks = mockObjectIDs.map(id => createMockArtwork(id, { title: `Artwork ${id}` }))
 
     mockSearchArtworks.mockResolvedValue({
       total: 5,
@@ -133,10 +57,10 @@ describe('useArtworkSearch', () => {
   it('should handle pagination correctly', async () => {
     const allObjectIDs = Array.from({ length: 25 }, (_, i) => i + 1)
     const firstPageArtworks = Array.from({ length: 20 }, (_, i) => 
-      createMockArtwork(i + 1, `Artwork ${i + 1}`)
+      createMockArtwork(i + 1, { title: `Artwork ${i + 1}` })
     )
     const secondPageArtworks = Array.from({ length: 5 }, (_, i) => 
-      createMockArtwork(i + 21, `Artwork ${i + 21}`)
+      createMockArtwork(i + 21, { title: `Artwork ${i + 21}` })
     )
 
     mockSearchArtworks.mockResolvedValue({
@@ -174,9 +98,9 @@ describe('useArtworkSearch', () => {
   it('should filter artworks with hasImages filter', async () => {
     const mockObjectIDs = [1, 2, 3]
     const mockArtworks = [
-      createMockArtwork(1, 'Artwork 1'),
-      { ...createMockArtwork(2, 'Artwork 2'), primaryImage: '', primaryImageSmall: '' },
-      createMockArtwork(3, 'Artwork 3'),
+      createMockArtwork(1, { title: 'Artwork 1' }),
+      { ...createMockArtwork(2, { title: 'Artwork 2' }), primaryImage: '', primaryImageSmall: '' },
+      createMockArtwork(3, { title: 'Artwork 3' }),
     ]
 
     mockSearchArtworks.mockResolvedValue({
@@ -202,10 +126,10 @@ describe('useArtworkSearch', () => {
 
   it('should sort artworks with images first when hasImages filter is undefined', async () => {
     const mockArtworks = [
-      { ...createMockArtwork(1, 'Artwork 1'), primaryImage: '', primaryImageSmall: '' },
-      createMockArtwork(2, 'Artwork 2'),
-      { ...createMockArtwork(3, 'Artwork 3'), primaryImage: '', primaryImageSmall: '' },
-      createMockArtwork(4, 'Artwork 4'),
+      { ...createMockArtwork(1, { title: 'Artwork 1' }), primaryImage: '', primaryImageSmall: '' },
+      createMockArtwork(2, { title: 'Artwork 2' }),
+      { ...createMockArtwork(3, { title: 'Artwork 3' }), primaryImage: '', primaryImageSmall: '' },
+      createMockArtwork(4, { title: 'Artwork 4' }),
     ]
 
     mockSearchArtworks.mockResolvedValue({
@@ -294,9 +218,9 @@ describe('useArtworkSearch', () => {
   it('should filter out null results from batchGetArtworks', async () => {
     const mockObjectIDs = [1, 2, 3]
     const mockArtworks = [
-      createMockArtwork(1, 'Artwork 1'),
+      createMockArtwork(1, { title: 'Artwork 1' }),
       null, // Failed fetch
-      createMockArtwork(3, 'Artwork 3'),
+      createMockArtwork(3, { title: 'Artwork 3' }),
     ]
 
     mockSearchArtworks.mockResolvedValue({
