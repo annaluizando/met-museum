@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SearchBar } from '@/components/features/searchBar'
@@ -91,10 +91,10 @@ describe('SearchBar', () => {
     // Initially, setQuery should not be called (debounced)
     expect(mockSetQuery).not.toHaveBeenCalled()
 
-    // Advance timers to trigger debounce
-    jest.advanceTimersByTime(UI_CONFIG.DEBOUNCE_DELAY)
+    act(() => {
+      jest.advanceTimersByTime(UI_CONFIG.DEBOUNCE_DELAY)
+    })
 
-    // Now setQuery should be called
     expect(mockSetQuery).toHaveBeenCalledWith('van gogh')
     
     jest.useRealTimers()
@@ -120,7 +120,6 @@ describe('SearchBar', () => {
   it('should clear query when clear button is clicked', async () => {
     const user = userEvent.setup()
     
-    // Set search params to have a query so localQuery initializes with text
     mockSearchParams = createMockSearchParams({ q: 'test' })
     
     ;(useSearchStore as unknown as jest.Mock).mockReturnValue({
@@ -164,10 +163,10 @@ describe('SearchBar', () => {
     // Initially, setQuery should not be called (debounced)
     expect(mockSetQuery).not.toHaveBeenCalled()
 
-    // Advance timers to trigger debounce
-    jest.advanceTimersByTime(UI_CONFIG.DEBOUNCE_DELAY)
+    act(() => {
+      jest.advanceTimersByTime(UI_CONFIG.DEBOUNCE_DELAY)
+    })
 
-    // Now setQuery should be called
     expect(mockSetQuery).toHaveBeenCalledWith('monet')
     
     jest.useRealTimers()
