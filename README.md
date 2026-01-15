@@ -23,15 +23,6 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 - **🌓 Theme Toggle**: Dark and light mode support
 - **📱 Responsive Design**: Fully responsive from mobile to desktop
 
-### Technical Highlights
-- **Type-Safe**: Strict TypeScript with comprehensive type definitions
-- **Accessible**: WCAG-compliant with proper ARIA labels and keyboard navigation
-- **Performant**: Optimized with React Query caching, skeleton loaders, and code splitting
-- **Well-Tested**: Unit and integration tests with Jest, and React Testing Library
-- **Documented**: Storybook stories for all major components with Vitest integration
-- **SEO-Friendly**: Dynamic metadata and proper semantic HTML
-- **Search History**: Persistent search history for quick access to recent searches
-
 ## 📋 Table of Contents
 
 - [Architecture](#architecture)
@@ -162,10 +153,49 @@ npm run test:watch   # Run tests in watch mode
 npm run storybook    # Start Storybook
 ```
 
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run with coverage
+npm test -- --coverage
+```
+
+### Test Coverage
+
+- **Unit Tests**: Utility functions, formatters (Jest)
+- **Component Tests**: UI components with user interactions (Jest + React Testing Library)
+- **Store Tests**: Zustand store actions and state updates (Jest)
+- **Storybook Tests**: Component tests via Vitest addon
+
+## 📚 Storybook
+
+### Running Storybook
+
+```bash
+npm run storybook
+```
+
+Visit [http://localhost:6006](http://localhost:6006)
+
+### What's Documented
+
+1. **Feature Components**: ArtworkCard, ArtworkGrid, EmptyState, ErrorState
+2. **All Visual States**: Default, Loading, Error, Empty, With Data
+3. **Interactive Controls**: Modify props in real-time
+4. **Vitest Integration**: Run component tests directly in Storybook
+
 ## 📁 Project Structure
 
 ```
-metmuseum/
+met-museum/
 ├── app/                          # Next.js App Router
 │   ├── api/                      # API routes (BFF pattern)
 │   │   ├── departments/          # Departments endpoint
@@ -310,19 +340,7 @@ metmuseum/
 - Better control over pagination
 - Graceful degradation if some items fail
 
-**Implementation**:
-```typescript
-// Get IDs from search
-const { objectIDs } = await searchArtworks(query)
-
-// Batch fetch page worth of details
-const pageIds = objectIDs.slice(start, end)
-const artworks = await Promise.all(
-  pageIds.map(id => getArtworkById(id).catch(() => null))
-)
-```
-
-### 5. Infinite Scroll & Virtual Scrolling
+### 4. Infinite Scroll & Virtual Scrolling
 **Decision**: Virtual scrolling with react-virtuoso + React Query  
 **Rationale**:
 - Virtual scrolling only renders visible items for better performance
@@ -331,7 +349,7 @@ const artworks = await Promise.all(
 - Supports both grid and list view modes
 - Automatic cleanup and memory management
 
-### 6. Type Safety Approach
+### 5. Type Safety Approach
 **Decision**: Strict TypeScript with comprehensive API types  
 **Rationale**:
 - Catch errors at compile time
@@ -340,7 +358,7 @@ const artworks = await Promise.all(
 - Easier refactoring
 - Generated from actual API responses
 
-### 7. Accessibility First
+### 6. Accessibility First
 **Decision**: Build accessibility in from the start  
 **Implementation**:
 - Semantic HTML elements
@@ -348,6 +366,26 @@ const artworks = await Promise.all(
 - Keyboard navigation (Tab, Enter, Escape)
 - Focus management
 - Screen reader announcements for dynamic content
+
+## 🎯 Performance Optimizations
+
+### Implemented
+
+1. **React Query Caching**: 5-minute stale time, aggressive caching
+2. **Debounced Search**: 600ms debounce to reduce API calls
+3. **Virtual Scrolling**: Only renders visible items using react-virtuoso
+4. **Image Lazy Loading**: Below-the-fold images load on demand
+5. **Code Splitting**: Dynamic imports for large components
+6. **Optimistic UI**: Instant feedback for collection updates
+7. **Request Deduplication**: Prevents duplicate API calls
+8. **Skeleton Screens**: Better perceived performance
+9. **Image Viewer**: Modal for viewing high-resolution artwork images
+10. **Similar Artworks**: Carousel showing related artworks
+11. **Featured Artworks**: Curated featured collection on homepage
+12. **Search History**: Persistent search history with Zustand
+13. **Theme Toggle**: Dark/light mode support
+14. **BFF (Backend for Frontend) Pattern**: API routes handle validation and proxy requests
+15. **Server-Side Caching**: API routes use Next.js caching with revalidation
 
 ## ⚖️ Trade-offs & Future Improvements
 
@@ -373,62 +411,3 @@ const artworks = await Promise.all(
 - [ ] Multi-language support
 - [ ] Search functionality within collections
 - [ ] Advanced filtering options (color, size, etc.)
-
-## 🧪 Testing
-
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run with coverage
-npm test -- --coverage
-```
-
-### Test Coverage
-
-- **Unit Tests**: Utility functions, formatters (Jest)
-- **Component Tests**: UI components with user interactions (Jest + React Testing Library)
-- **Store Tests**: Zustand store actions and state updates (Jest)
-- **Storybook Tests**: Component tests via Vitest addon
-
-## 📚 Storybook
-
-### Running Storybook
-
-```bash
-npm run storybook
-```
-
-Visit [http://localhost:6006](http://localhost:6006)
-
-### What's Documented
-
-1. **Feature Components**: ArtworkCard, ArtworkGrid, EmptyState, ErrorState
-2. **All Visual States**: Default, Loading, Error, Empty, With Data
-3. **Interactive Controls**: Modify props in real-time
-4. **Vitest Integration**: Run component tests directly in Storybook
-
-## 🎯 Performance Optimizations
-
-### Implemented
-
-1. **React Query Caching**: 5-minute stale time, aggressive caching
-2. **Debounced Search**: 600ms debounce to reduce API calls
-3. **Virtual Scrolling**: Only renders visible items using react-virtuoso
-4. **Image Lazy Loading**: Below-the-fold images load on demand
-5. **Code Splitting**: Dynamic imports for large components
-6. **Optimistic UI**: Instant feedback for collection updates
-7. **Request Deduplication**: Prevents duplicate API calls
-8. **Skeleton Screens**: Better perceived performance
-9. **Image Viewer**: Modal for viewing high-resolution artwork images
-10. **Similar Artworks**: Carousel showing related artworks
-11. **Featured Artworks**: Curated featured collection on homepage
-12. **Search History**: Persistent search history with Zustand
-13. **Theme Toggle**: Dark/light mode support
-14. **BFF (Backend for Frontend) Pattern**: API routes handle validation and proxy requests
-15. **Server-Side Caching**: API routes use Next.js caching with revalidation
