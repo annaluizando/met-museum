@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { SearchBar } from '@/components/features/search-bar'
+import { SearchBar } from '@/components/features/searchBar'
 import { useSearchStore } from '@/lib/stores/search-store'
 
 // Mock the search store

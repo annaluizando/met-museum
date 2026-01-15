@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { sanitizeImageUrl, truncateText, formatArtworkDate } from '@/lib/utils/formatters'
-import { AddToCollection } from './add-to-collection'
+import { AddToCollection } from './addToCollection'
 import type { ArtworkObject } from '@/lib/types/artwork'
 import { cn } from '@/lib/utils/cn'
 

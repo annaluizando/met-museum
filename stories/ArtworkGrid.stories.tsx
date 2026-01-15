@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { ArtworkGrid } from '@/components/features/artwork-grid';
-import { ArtworkCardSkeleton } from '@/components/features/artwork-card-skeleton';
-import { EmptyState } from '@/components/features/empty-state';
-import { ErrorState } from '@/components/features/error-state';
-import { ArtworkCard } from '@/components/features/artwork-card';
+import { ArtworkGrid } from '@/components/features/artworkGrid';
+import { ArtworkCardSkeleton } from '@/components/features/artworkCardSkeleton';
+import { EmptyState } from '@/components/features/emptyState';
+import { ErrorState } from '@/components/features/errorState';
+import { ArtworkCard } from '@/components/features/artworkCard';
 import type { ArtworkObject } from '@/lib/types/artwork';
 
 const meta = {

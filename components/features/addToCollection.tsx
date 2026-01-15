@@ -5,7 +5,7 @@ import { Plus, X, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useCollectionsStore } from '@/lib/stores/collections-store'
-import { CollectionForm } from './collection-form'
+import { CollectionForm } from './collectionForm'
 
 interface AddToCollectionProps {
   artworkId: number

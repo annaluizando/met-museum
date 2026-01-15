@@ -1,7 +1,7 @@
 'use client'
 
-import { SearchBar } from '@/components/features/search-bar'
-import { ArtworkGrid } from '@/components/features/artwork-grid'
+import { SearchBar } from '@/components/features/searchBar'
+import { ArtworkGrid } from '@/components/features/artworkGrid'
 
 /**
  * Home page with search and infinite scroll artwork grid

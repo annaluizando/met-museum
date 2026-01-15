@@ -6,10 +6,10 @@ import { ArrowLeft, ExternalLink, Calendar, MapPin, Palette, Building } from 'lu
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ErrorState } from '@/components/features/error-state'
-import { ImageViewer } from '@/components/features/image-viewer'
-import { AddToCollection } from '@/components/features/add-to-collection'
-import { useArtworkDetail } from '@/lib/hooks/use-artwork-detail'
+import { ErrorState } from '@/components/features/errorState'
+import { ImageViewer } from '@/components/features/imageViewer'
+import { AddToCollection } from '@/components/features/addToCollection'
+import { useArtworkDetail } from '@/lib/hooks/useArtworkDetail'
 import { sanitizeImageUrl, formatArtworkDate } from '@/lib/utils/formatters'
 
 interface ArtworkDetailViewProps {
@@ -21,7 +21,7 @@ interface ArtworkDetailViewProps {
  */
 export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
   const router = useRouter()
-  const { data: artwork, isLoading, isError, error, refetch } = useArtworkDetail(artworkId)
+  const { data: artwork, isLoading, isError, refetch } = useArtworkDetail(artworkId)
 
   if (isLoading) {
     return <ArtworkDetailSkeleton />
@@ -31,7 +31,7 @@ export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorState
-          message={error?.message || 'Failed to load artwork details'}
+          message="Failed to load artwork details. Please try again."
           onRetry={() => refetch()}
         />
       </div>

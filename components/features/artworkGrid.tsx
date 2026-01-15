@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { ArtworkCard } from './artwork-card'
-import { ArtworkCardSkeleton } from './artwork-card-skeleton'
-import { EmptyState } from './empty-state'
-import { ErrorState } from './error-state'
-import { FeaturedArtworks } from './featured-artworks'
-import { useArtworkSearch } from '@/lib/hooks/use-artwork-search'
+import { ArtworkCard } from './artworkCard'
+import { ArtworkCardSkeleton } from './artworkCardSkeleton'
+import { EmptyState } from './emptyState'
+import { ErrorState } from './errorState'
+import { FeaturedArtworks } from './featuredArtworks'
+import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { UI_CONFIG } from '@/lib/constants/config'
 import { cn } from '@/lib/utils/cn'
@@ -27,7 +27,6 @@ export function ArtworkGrid() {
     isFetchingNextPage,
     isLoading,
     isError,
-    error,
     refetch,
   } = useArtworkSearch({
     query,
@@ -86,7 +85,7 @@ export function ArtworkGrid() {
   if (isError) {
     return (
       <ErrorState
-        message={error?.message || 'Failed to load artworks. Please try again.'}
+        message="Failed to load artworks. Please try again."
         onRetry={() => refetch()}
       />
     )

@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArtworkCard } from './artwork-card'
-import { ArtworkCardSkeleton } from './artwork-card-skeleton'
-import { useFeaturedArtworks } from '@/lib/hooks/use-featured-artworks'
+import { ArtworkCard } from './artworkCard'
+import { ArtworkCardSkeleton } from './artworkCardSkeleton'
+import { useFeaturedArtworks } from '@/lib/hooks/useFeaturedArtworks'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { cn } from '@/lib/utils/cn'
 import { Search } from 'lucide-react'

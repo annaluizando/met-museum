@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { ErrorState } from '@/components/features/error-state';
+import { ErrorState } from '@/components/features/errorState';
 
 const meta = {
   title: 'Features/ErrorState',

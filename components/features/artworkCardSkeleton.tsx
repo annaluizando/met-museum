@@ -19,7 +19,7 @@ export function ArtworkCardSkeleton({ viewMode = 'grid' }: ArtworkCardSkeletonPr
     )}>
       {/* Image Skeleton */}
       <Skeleton className={cn(
-        isListView ? "w-48 h-48 flex-shrink-0" : "aspect-square w-full",
+        isListView ? "w-48 h-48 shrink-0" : "aspect-square w-full",
         "rounded-none"
       )} />
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CollectionList } from '@/components/features/collection-list'
+import { CollectionList } from '@/components/features/collectionList'
 
 export const metadata: Metadata = {
   title: 'My Collections | MetMuseum Explorer',

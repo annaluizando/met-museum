@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { EmptyState } from '@/components/features/empty-state';
+import { EmptyState } from '@/components/features/emptyState';
 
 const meta = {
   title: 'Features/EmptyState',

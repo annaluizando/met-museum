@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { ArtworkCard } from '@/components/features/artwork-card';
-import { ArtworkCardSkeleton } from '@/components/features/artwork-card-skeleton';
+import { ArtworkCard } from '@/components/features/artworkCard';
+import { ArtworkCardSkeleton } from '@/components/features/artworkCardSkeleton';
 import type { ArtworkObject } from '@/lib/types/artwork';
 
 const meta = {

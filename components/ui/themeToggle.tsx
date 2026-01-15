@@ -1,7 +1,7 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import { useTheme } from '@/lib/hooks/use-theme'
+import { useTheme } from '@/lib/hooks/useTheme'
 import { Button } from '@/components/ui/button'
 
 /**
