@@ -42,7 +42,8 @@ export function ArtworkGrid() {
     enabled: query.trim().length > 0 || hasActiveFilters(filters),
   })
 
-  const allArtworks = data?.pages.flatMap(page => page.artworks) || []
+  const allArtworks = (data?.pages.flatMap(page => page.artworks) || [])
+    .filter((artwork): artwork is NonNullable<typeof artwork> => artwork != null && artwork.objectID != null)
   const artworks = sortOrder === 'relevance' 
     ? allArtworks 
     : sortArtworks(allArtworks, sortOrder)
@@ -167,21 +168,23 @@ export function ArtworkGrid() {
         role="list"
         aria-label="Artwork results"
       >
-        {artworks.map((artwork, index) => (
-          <article 
-            key={artwork.objectID}
-            role="listitem"
-            className={cn(
-              "view-mode-transition",
-              isTransitioning ? "opacity-50 scale-95" : "opacity-100 scale-100"
-            )}
-            style={{
-              transitionDelay: `${Math.min(index * 10, 200)}ms`,
-            }}
-          >
-            <ArtworkCard artwork={artwork} viewMode={viewMode} />
-          </article>
-        ))}
+        {artworks
+          .filter((artwork): artwork is NonNullable<typeof artwork> => artwork != null && artwork.objectID != null)
+          .map((artwork, index) => (
+            <article 
+              key={artwork.objectID}
+              role="listitem"
+              className={cn(
+                "view-mode-transition",
+                isTransitioning ? "opacity-50 scale-95" : "opacity-100 scale-100"
+              )}
+              style={{
+                transitionDelay: `${Math.min(index * 10, 200)}ms`,
+              }}
+            >
+              <ArtworkCard artwork={artwork} viewMode={viewMode} />
+            </article>
+          ))}
       </div>
 
       {/* Loading more indicator */}

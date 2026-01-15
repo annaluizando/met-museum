@@ -66,11 +66,14 @@ export function VirtualizedArtworkList({
         useWindowScroll
         totalCount={artworks.length}
         data={artworks}
-        itemContent={(_, artwork) => (
-          <div className="mb-6">
-            <ArtworkCard artwork={artwork} viewMode="list" />
-          </div>
-        )}
+        itemContent={(_, artwork) => {
+          if (!artwork || !artwork.objectID) return null
+          return (
+            <div className="mb-6">
+              <ArtworkCard artwork={artwork} viewMode="list" />
+            </div>
+          )
+        }}
         endReached={handleEndReached}
         components={{
           Footer: () => {
@@ -112,11 +115,13 @@ export function VirtualizedArtworkList({
               itemsPerRow === 1 && "grid-cols-1"
             )}
           >
-            {rowItems.map((artwork) => (
-              <article key={artwork.objectID} role="listitem">
-                <ArtworkCard artwork={artwork} viewMode="grid" />
-              </article>
-            ))}
+            {rowItems
+              .filter((artwork): artwork is NonNullable<typeof artwork> => artwork != null && artwork.objectID != null)
+              .map((artwork) => (
+                <article key={artwork.objectID} role="listitem">
+                  <ArtworkCard artwork={artwork} viewMode="grid" />
+                </article>
+              ))}
             {/* Fill empty slots in last row */}
             {rowItems.length < itemsPerRow &&
               Array.from({ length: itemsPerRow - rowItems.length }).map((_, i) => (

@@ -58,7 +58,11 @@ export function useArtworkSearch({
 
       const orderedArtworks = pageIds
         .map(id => artworkMap.get(id))
-        .filter((artwork): artwork is ArtworkObject => artwork !== null)
+        .filter((artwork): artwork is ArtworkObject => 
+          artwork != null && 
+          artwork.objectID != null &&
+          typeof artwork.objectID === 'number'
+        )
 
       const filteredArtworks = filters?.hasImages === true
         ? orderedArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
