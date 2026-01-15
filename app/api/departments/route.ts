@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
 import { API_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
+import type { DepartmentsResponse } from '@/lib/types/artwork'
 
-/**
- * Route Handler: Proxy for fetching departments
- * Prevents CORS issues for client-side requests
- * Server Components should use direct API calls from lib/api/artworks
- */
 export async function GET() {
   try {
     const url = `${API_CONFIG.BASE_URL}/departments`
@@ -26,7 +22,7 @@ export async function GET() {
       )
     }
 
-    let data
+    let data: DepartmentsResponse
     try {
       data = await response.json()
     } catch (jsonError) {

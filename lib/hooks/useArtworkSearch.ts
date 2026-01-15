@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { searchArtworks, batchGetArtworks, getDepartments } from '@/lib/api/artworks'
+import { searchArtworks, batchGetArtworks } from '@/lib/api/artworks'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
 import { PAGINATION, REACT_QUERY_CONFIG } from '@/lib/constants/config'
 import { hasActiveFilters, filterByHasImages } from '@/lib/utils/filters'
@@ -13,10 +13,6 @@ interface UseArtworkSearchOptions {
   enabled?: boolean
 }
 
-/**
- * Retries failed artwork fetches to improve reliability when filtering by department
- * Some artworks may fail due to transient network issues or API rate limits
- */
 async function retryFailedArtworks(
   pageIds: number[],
   initialArtworks: (ArtworkObject | null)[]
@@ -36,33 +32,6 @@ async function retryFailedArtworks(
     }
     return initialArtworks[index]
   })
-}
-
-/**
- * Validates that artworks match the department filter
- * The API may occasionally return artworks from other departments, so we filter them client-side
- */
-async function filterByDepartment(
-  artworks: ArtworkObject[],
-  departmentId?: number
-): Promise<ArtworkObject[]> {
-  if (!departmentId) {
-    return artworks
-  }
-
-  try {
-    const departmentsResponse = await getDepartments()
-    const departmentMap = new Map(
-      departmentsResponse.departments.map(dept => [dept.displayName, dept.departmentId])
-    )
-
-    return artworks.filter(artwork => {
-      const artworkDepartmentId = departmentMap.get(artwork.department)
-      return artworkDepartmentId === departmentId
-    })
-  } catch {
-    return artworks
-  }
 }
 
 /**
@@ -122,8 +91,7 @@ export function useArtworkSearch({
           typeof artwork.objectID === 'number'
         )
 
-      let filteredArtworks = filterByHasImages(orderedArtworks, filters?.hasImages)
-      filteredArtworks = await filterByDepartment(filteredArtworks, filters?.departmentId)
+      const filteredArtworks = filterByHasImages(orderedArtworks, filters?.hasImages)
 
       const hasMore = endIndex < totalObjectIDs
 
