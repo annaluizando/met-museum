@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 
@@ -8,15 +7,11 @@ import { AlertTriangle } from 'lucide-react'
  * Global error boundary
  */
 export default function Error({
-  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => {
-    console.error('Application error:', error)
-  }, [error])
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
