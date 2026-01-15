@@ -1,4 +1,4 @@
-import { API_CONFIG } from '@/lib/constants/config'
+import { API_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 import type { ApiError } from '@/lib/types/artwork'
 
 /**
@@ -94,13 +94,22 @@ export async function fetchApi<T>(
 
       if (!response.ok) {
         throw new MetApiError(
-          `API request failed: ${response.statusText}`,
+          ERROR_MESSAGES.GENERIC,
           response.status
         )
       }
 
-      const data = await response.json()
-      return data as T
+      let data: T
+      try {
+        data = await response.json()
+      } catch (jsonError) {
+        throw new MetApiError(
+          ERROR_MESSAGES.GENERIC,
+          response.status
+        )
+      }
+      
+      return data
     } catch (error) {
       lastError = error as Error
 
@@ -119,10 +128,9 @@ export async function fetchApi<T>(
 
   clearTimeout(timeoutId)
 
-  // If all retries failed, throw the last error
   throw new MetApiError(
-    lastError?.message || 'Request failed. Please try again later.',
+    ERROR_MESSAGES.GENERIC,
     undefined,
-    lastError
+    lastError // Keep details for server-side logging only
   )
 }

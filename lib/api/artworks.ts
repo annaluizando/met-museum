@@ -1,4 +1,5 @@
-import { fetchApi } from './client'
+import { fetchApi, MetApiError } from './client'
+import { ERROR_MESSAGES } from '@/lib/constants/config'
 import type {
   ArtworkObject,
   SearchResponse,
@@ -21,7 +22,16 @@ export async function searchArtworks(
   const queryResult = searchQuerySchema.safeParse(sanitizedQuery)
   
   if (!queryResult.success) {
-    throw new Error('Invalid search query')
+    // Log validation error server-side for debugging
+    console.error('Search query validation failed:', {
+      originalQuery: query,
+      sanitizedQuery,
+      validationErrors: queryResult.error.issues,
+      errorCount: queryResult.error.issues.length,
+    })
+    
+    // Always throw the same generic error message to users
+    throw new MetApiError(ERROR_MESSAGES.GENERIC)
   }
   
   let validatedFilters: SearchFilters | undefined
@@ -67,8 +77,17 @@ export async function searchArtworks(
 }
 
 export async function getArtworkById(id: number): Promise<ArtworkObject> {
- if (!Number.isInteger(id) || id <= 0) {
-    throw new Error('Artwork ID must be a positive integer')
+  if (!Number.isInteger(id) || id <= 0) {
+    // Log validation error server-side for debugging
+    console.error('Invalid artwork ID:', {
+      id,
+      type: typeof id,
+      isInteger: Number.isInteger(id),
+      isPositive: id > 0,
+    })
+    
+    // Always throw the same generic error message to users
+    throw new MetApiError(ERROR_MESSAGES.GENERIC)
   }
   
   return fetchApi<ArtworkObject>(`/objects/${id}`)

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { API_CONFIG } from '@/lib/constants/config'
+import { API_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 import { artworkIdSchema } from '@/lib/validations/artwork'
 
 /**
@@ -21,8 +21,10 @@ export async function GET(
     const result = artworkIdSchema.safeParse(id)
     
     if (!result.success) {
+      console.error('Invalid artwork ID:', { id, errors: result.error.issues })
+      
       return NextResponse.json(
-        { error: 'Invalid artwork ID. Must be a positive integer.' },
+        { error: ERROR_MESSAGES.GENERIC },
         { status: 400 }
       )
     }
@@ -36,22 +38,48 @@ export async function GET(
     })
 
     if (!response.ok) {
+      console.error('Failed to fetch artwork from Met API:', {
+        id: sanitizedId,
+        status: response.status,
+        statusText: response.statusText,
+      })
+      
       return NextResponse.json(
-        { error: 'Failed to fetch artwork' },
+        { error: ERROR_MESSAGES.GENERIC },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      console.error('Error parsing JSON response:', {
+        id: sanitizedId,
+        error: jsonError,
+      })
+      
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.GENERIC },
+        { status: 502 }
+      )
+    }
+
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
     })
   } catch (error) {
-    console.error('Error fetching artwork:', error)
+    console.error('Error fetching artwork:', {
+      error,
+      errorName: error instanceof Error ? error.name : undefined,
+      errorMessage: error instanceof Error ? error.message : undefined,
+      errorStack: error instanceof Error ? error.stack : undefined,
+    })
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: ERROR_MESSAGES.GENERIC },
       { status: 500 }
     )
   }

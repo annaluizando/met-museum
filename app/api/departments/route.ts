@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { API_CONFIG } from '@/lib/constants/config'
+import { API_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 
 /**
  * Route Handler: Proxy for fetching departments
@@ -18,22 +18,49 @@ export async function GET() {
     })
 
     if (!response.ok) {
+      // Log error server-side for debugging (includes status code and details)
+      console.error('Failed to fetch departments from Met API:', {
+        status: response.status,
+        statusText: response.statusText,
+      })
+      
       return NextResponse.json(
-        { error: 'Failed to fetch departments' },
+        { error: ERROR_MESSAGES.GENERIC },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      // Log error server-side for debugging (includes full error details)
+      console.error('Error parsing JSON response:', {
+        error: jsonError,
+      })
+      
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.GENERIC },
+        { status: 502 }
+      )
+    }
+
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
     })
   } catch (error) {
-    console.error('Error fetching departments:', error)
+    // Log full error details server-side for debugging
+    console.error('Error fetching departments:', {
+      error,
+      errorName: error instanceof Error ? error.name : undefined,
+      errorMessage: error instanceof Error ? error.message : undefined,
+      errorStack: error instanceof Error ? error.stack : undefined,
+    })
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: ERROR_MESSAGES.GENERIC },
       { status: 500 }
     )
   }

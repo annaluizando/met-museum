@@ -30,3 +30,7 @@ export const UI_CONFIG = {
   DEBOUNCE_DELAY: 300,
   IMAGE_FALLBACK: '/placeholder-artwork.jpg',
 } as const
+
+export const ERROR_MESSAGES = {
+  GENERIC: 'Something went wrong. Please try again.',
+} as const

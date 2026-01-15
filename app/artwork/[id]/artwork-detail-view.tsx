@@ -11,6 +11,7 @@ import { ImageViewer } from '@/components/features/imageViewer'
 import { AddToCollection } from '@/components/features/addToCollection'
 import { useArtworkDetail } from '@/lib/hooks/useArtworkDetail'
 import { sanitizeImageUrl, formatArtworkDate } from '@/lib/utils/formatters'
+import { ERROR_MESSAGES } from '@/lib/constants/config'
 
 interface ArtworkDetailViewProps {
   artworkId: number
@@ -31,7 +32,7 @@ export function ArtworkDetailView({ artworkId }: ArtworkDetailViewProps) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorState
-          message="Failed to load artwork details. Please try again."
+          message={ERROR_MESSAGES.GENERIC}
           onRetry={() => refetch()}
         />
       </div>

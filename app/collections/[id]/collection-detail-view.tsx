@@ -13,7 +13,7 @@ import { useCollectionsStore } from '@/lib/stores/collections-store'
 import { batchGetArtworks } from '@/lib/api/artworks'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
-import { REACT_QUERY_CONFIG } from '@/lib/constants/config'
+import { REACT_QUERY_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 import { cn } from '@/lib/utils/cn'
 import type { ArtworkObject } from '@/lib/types/artwork'
 
@@ -164,7 +164,7 @@ export function CollectionDetailView({ collectionId }: CollectionDetailViewProps
         <EmptyState
           type="error"
           title="Failed to load artworks"
-          description="There was an error loading the artworks in this collection. Please try again."
+          description={ERROR_MESSAGES.GENERIC}
         />
       ) : !artworks || artworks.length === 0 ? (
         <EmptyState

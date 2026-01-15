@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_CONFIG } from '@/lib/constants/config'
+import { API_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 import { searchQuerySchema, searchFiltersSchema } from '@/lib/validations/search'
 import { sanitizeSearchQuery, sanitizeString, sanitizeNumber, sanitizeBoolean } from '@/lib/utils/sanitize'
 
@@ -20,8 +20,13 @@ export async function GET(request: NextRequest) {
     const queryResult = searchQuerySchema.safeParse(sanitizedQuery)
     
     if (!queryResult.success || !sanitizedQuery) {
+      console.error('Search query validation failed:', {
+        query: sanitizedQuery,
+        errors: queryResult.success ? undefined : queryResult.error.issues,
+      })
+      
       return NextResponse.json(
-        { error: 'Valid query parameter "q" is required (max 500 characters)' },
+        { error: ERROR_MESSAGES.GENERIC },
         { status: 400 }
       )
     }
@@ -136,22 +141,49 @@ export async function GET(request: NextRequest) {
     })
 
     if (!response.ok) {
+      console.error('Failed to search artworks from Met API:', {
+        query: queryResult.data,
+        filters: validatedFilters,
+        status: response.status,
+        statusText: response.statusText,
+      })
+      
       return NextResponse.json(
-        { error: 'Failed to search artworks' },
+        { error: ERROR_MESSAGES.GENERIC },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      console.error('Error parsing JSON response:', {
+        query: queryResult.data,
+        error: jsonError,
+      })
+      
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.GENERIC },
+        { status: 502 }
+      )
+    }
+
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     })
   } catch (error) {
-    console.error('Error searching artworks:', error)
+    console.error('Error searching artworks:', {
+      error,
+      errorName: error instanceof Error ? error.name : undefined,
+      errorMessage: error instanceof Error ? error.message : undefined,
+      errorStack: error instanceof Error ? error.stack : undefined,
+    })
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: ERROR_MESSAGES.GENERIC },
       { status: 500 }
     )
   }

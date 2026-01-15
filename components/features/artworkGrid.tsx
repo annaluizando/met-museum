@@ -8,7 +8,7 @@ import { ErrorState } from './errorState'
 import { FeaturedArtworks } from './featuredArtworks'
 import { useArtworkSearch } from '@/lib/hooks/useArtworkSearch'
 import { useSearchStore } from '@/lib/stores/search-store'
-import { UI_CONFIG } from '@/lib/constants/config'
+import { UI_CONFIG, ERROR_MESSAGES } from '@/lib/constants/config'
 import { cn } from '@/lib/utils/cn'
 
 /**
@@ -85,7 +85,7 @@ export function ArtworkGrid() {
   if (isError) {
     return (
       <ErrorState
-        message="Failed to load artworks. Please try again."
+        message={ERROR_MESSAGES.GENERIC}
         onRetry={() => refetch()}
       />
     )
