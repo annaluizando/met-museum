@@ -26,24 +26,19 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
   const { filters, setFilters, resetFilters } = useSearchStore()
   const { data: departmentsData, isLoading: departmentsLoading } = useDepartments()
   
-  // Local state for form inputs
   const [localFilters, setLocalFilters] = useState<SearchFilters>(filters)
 
-  // Sync local filters with store when filters change externally
   useEffect(() => {
     setLocalFilters(filters)
   }, [filters])
 
   const handleApplyFilters = useCallback(() => {
-    // Validate all filters before applying
     const result = searchFiltersSchema.safeParse(localFilters)
     
     if (result.success) {
       setFilters(result.data)
       onClose()
     } else {
-      // If validation fails, still apply but with sanitized values
-      // This prevents blocking the user while ensuring security
       const sanitizedFilters: SearchFilters = {
         ...localFilters,
         medium: localFilters.medium ? sanitizeString(localFilters.medium).substring(0, 200) : undefined,
@@ -53,7 +48,6 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
         departmentId: localFilters.departmentId !== undefined ? sanitizeNumber(localFilters.departmentId, 1) ?? undefined : undefined,
       }
       
-      // Ensure dateBegin <= dateEnd
       if (sanitizedFilters.dateBegin !== undefined && sanitizedFilters.dateEnd !== undefined) {
         if (sanitizedFilters.dateBegin > sanitizedFilters.dateEnd) {
           sanitizedFilters.dateBegin = sanitizedFilters.dateEnd
@@ -75,11 +69,10 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     key: K,
     value: SearchFilters[K]
   ) => {
-    setLocalFilters(prev => {
-      let sanitizedValue: SearchFilters[K] = value
-      
-      // Sanitize based on field type
-      if (key === 'medium' || key === 'geoLocation') {
+      setLocalFilters(prev => {
+        let sanitizedValue: SearchFilters[K] = value
+        
+        if (key === 'medium' || key === 'geoLocation') {
         if (typeof value === 'string') {
           sanitizedValue = sanitizeString(value).substring(0, 200) as SearchFilters[K]
         }
@@ -113,7 +106,6 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     const sanitizedEnd = sanitizeNumber(end, -5000, new Date().getFullYear())
     
     if (sanitizedBegin !== null && sanitizedEnd !== null) {
-      // Ensure begin <= end
       const finalBegin = Math.min(sanitizedBegin, sanitizedEnd)
       const finalEnd = Math.max(sanitizedBegin, sanitizedEnd)
       

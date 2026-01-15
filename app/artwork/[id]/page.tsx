@@ -15,7 +15,6 @@ export async function generateMetadata({ params }: ArtworkPageProps): Promise<Me
   try {
     const { id } = await params
     
-    // Validate ID format
     const idResult = artworkIdSchema.safeParse(id)
     if (!idResult.success) {
       return {
@@ -43,7 +42,6 @@ export async function generateMetadata({ params }: ArtworkPageProps): Promise<Me
       }
     }
     
-    // For any other error, return generic metadata (never expose internal error details)
     return {
       title: 'Artwork Details | MetMuseum Explorer',
       description: 'View artwork details from The Metropolitan Museum of Art collection',
@@ -57,23 +55,17 @@ export async function generateMetadata({ params }: ArtworkPageProps): Promise<Me
 export default async function ArtworkPage({ params }: ArtworkPageProps) {
   const { id } = await params
   
-  // Validate ID format
   const idResult = artworkIdSchema.safeParse(id)
   if (!idResult.success) {
     notFound()
   }
   
   try {
-    // Try to fetch artwork - if it doesn't exist, show 404
     await getArtworkById(idResult.data)
   } catch (error) {
-    // If 404 or artwork not found, show not found page
-    // Only check for safe, identifiable error patterns (404, not found)
     if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
       notFound()
     }
-    // For any other errors, let the client component handle it
-    // The client component uses hardcoded generic messages to ensure no internal details are exposed
   }
   
   return <ArtworkDetailView artworkId={idResult.data} />

@@ -4,11 +4,8 @@ import { artworkIdSchema } from '@/lib/validations/artwork'
 
 /**
  * Route Handler: Proxy for fetching individual artwork by ID
- * 
- * Purpose: Prevents CORS issues for client-side requests
- * Server Components should use direct API calls (no proxy needed)
- * 
- * @see https://nextjs.org/docs/app/guides/backend-for-frontend
+ * Prevents CORS issues for client-side requests
+ * Server Components should use direct API calls from lib/api/artworks
  */
 
 export async function GET(
@@ -34,7 +31,7 @@ export async function GET(
     const url = `${API_CONFIG.BASE_URL}/objects/${sanitizedId}`
     
     const response = await fetch(url, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 3600 },
     })
 
     if (!response.ok) {

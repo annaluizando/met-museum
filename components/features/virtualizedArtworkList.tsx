@@ -30,7 +30,6 @@ export function VirtualizedArtworkList({
     typeof window !== 'undefined' ? window.innerWidth : 1920
   )
 
-  // Handle window resize for responsive grid
   useEffect(() => {
     if (viewMode === 'list') return
 
@@ -45,11 +44,10 @@ export function VirtualizedArtworkList({
   const itemsPerRow = useMemo(() => {
     if (viewMode === 'list') return 1
     
-    // Responsive columns based on viewport (matching Tailwind breakpoints)
-    if (windowWidth >= 1280) return 4 // xl: 4 columns
-    if (windowWidth >= 1024) return 3 // lg: 3 columns
-    if (windowWidth >= 640) return 2  // sm: 2 columns
-    return 1 // mobile: 1 column
+    if (windowWidth >= 1280) return 4
+    if (windowWidth >= 1024) return 3
+    if (windowWidth >= 640) return 2
+    return 1
   }, [viewMode, windowWidth])
 
   const totalRows = useMemo(() => {

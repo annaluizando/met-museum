@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2, X } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { UI_CONFIG } from '@/lib/constants/config'
 
 interface ToastProps {
   message: string
@@ -10,13 +11,13 @@ interface ToastProps {
   onClose: () => void
 }
 
-export function Toast({ message, duration = 3000, onClose }: ToastProps) {
+export function Toast({ message, duration = UI_CONFIG.TOAST_DEFAULT_DURATION, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false)
-      setTimeout(onClose, 200) // Wait for fade out animation
+      setTimeout(onClose, UI_CONFIG.TOAST_FADE_OUT_DELAY)
     }, duration)
 
     return () => clearTimeout(timer)
@@ -37,7 +38,7 @@ export function Toast({ message, duration = 3000, onClose }: ToastProps) {
       <button
         onClick={() => {
           setIsVisible(false)
-          setTimeout(onClose, 300)
+          setTimeout(onClose, UI_CONFIG.TOAST_CLOSE_DELAY)
         }}
         className="shrink-0 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
         aria-label="Close notification"

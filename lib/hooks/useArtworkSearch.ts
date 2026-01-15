@@ -22,7 +22,6 @@ export function useArtworkSearch({
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.ARTWORKS.INFINITE(query, filters),
     queryFn: async ({ pageParam = 0 }) => {
-      // If no query, return empty results
       if (!query.trim()) {
         return {
           artworks: [],
@@ -31,7 +30,6 @@ export function useArtworkSearch({
         }
       }
 
-      // Search for artwork IDs
       const searchResults = await searchArtworks(query, filters)
       
       if (!searchResults.objectIDs || searchResults.objectIDs.length === 0) {
@@ -42,7 +40,6 @@ export function useArtworkSearch({
         }
       }
 
-      // Calculate pagination
       const startIndex = pageParam
       const endIndex = Math.min(
         startIndex + PAGINATION.ITEMS_PER_PAGE,
@@ -50,11 +47,8 @@ export function useArtworkSearch({
       )
       
       const pageIds = searchResults.objectIDs.slice(startIndex, endIndex)
-      
-      // Batch fetch artwork details
       const artworks = await batchGetArtworks(pageIds)
       
-      // Filter out null results (failed fetches)
       const validArtworks = artworks.filter(
         (artwork): artwork is ArtworkObject => artwork !== null
       )
@@ -63,14 +57,11 @@ export function useArtworkSearch({
         ? validArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
         : validArtworks
 
-      // Sort artworks: those with images first, then those without
-      // Only sort if hasImages filter is not explicitly set (allows users to filter if they want)
       const sortedArtworks = filters?.hasImages === undefined
         ? filteredArtworks.sort((a, b) => {
             const aHasImage = !!(a.primaryImage || a.primaryImageSmall)
             const bHasImage = !!(b.primaryImage || b.primaryImageSmall)
             
-            // If both have images or both don't, maintain original order
             if (aHasImage === bHasImage) return 0
             if (aHasImage && !bHasImage) return -1
             return 1

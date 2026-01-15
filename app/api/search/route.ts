@@ -5,11 +5,8 @@ import { sanitizeSearchQuery, sanitizeString, sanitizeNumber, sanitizeBoolean } 
 
 /**
  * Route Handler: Proxy for searching artworks
- * 
- * Purpose: Prevents CORS issues for client-side requests
- * Server Components should use direct API calls (no proxy needed)
- * 
- * @see https://nextjs.org/docs/app/guides/backend-for-frontend
+ * Prevents CORS issues for client-side requests
+ * Server Components should use direct API calls from lib/api/artworks
  */
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +30,6 @@ export async function GET(request: NextRequest) {
 
     const filters: Record<string, string | number | boolean> = {}
     
-    // Department ID
     const deptId = searchParams.get('departmentId')
     if (deptId) {
       const sanitized = sanitizeNumber(Number(deptId), 1)
@@ -42,7 +38,6 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Medium
     const medium = searchParams.get('medium')
     if (medium) {
       const sanitized = sanitizeString(medium).substring(0, 200)
@@ -51,7 +46,6 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Geographic Location
     const geoLocation = searchParams.get('geoLocation')
     if (geoLocation) {
       const sanitized = sanitizeString(geoLocation).substring(0, 200)
@@ -60,7 +54,6 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Date range
     const dateBegin = searchParams.get('dateBegin')
     const dateEnd = searchParams.get('dateEnd')
     if (dateBegin) {
@@ -76,7 +69,6 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Boolean filters
     const hasImages = searchParams.get('hasImages')
     if (hasImages !== null) {
       const sanitized = sanitizeBoolean(hasImages)
@@ -101,43 +93,40 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Validate filters with Zod
     const filtersResult = searchFiltersSchema.safeParse(filters)
     const validatedFilters = filtersResult.success ? filtersResult.data : {}
-    
-    // Build safe URL parameters
-    const safeParams = new URLSearchParams()
-    safeParams.append('q', queryResult.data)
+    const params = new URLSearchParams()
+    params.append('q', queryResult.data)
     
     if (validatedFilters.departmentId) {
-      safeParams.append('departmentId', validatedFilters.departmentId.toString())
+      params.append('departmentId', validatedFilters.departmentId.toString())
     }
     if (validatedFilters.medium) {
-      safeParams.append('medium', validatedFilters.medium)
+      params.append('medium', validatedFilters.medium)
     }
     if (validatedFilters.geoLocation) {
-      safeParams.append('geoLocation', validatedFilters.geoLocation)
+      params.append('geoLocation', validatedFilters.geoLocation)
     }
     if (validatedFilters.dateBegin !== undefined) {
-      safeParams.append('dateBegin', validatedFilters.dateBegin.toString())
+      params.append('dateBegin', validatedFilters.dateBegin.toString())
     }
     if (validatedFilters.dateEnd !== undefined) {
-      safeParams.append('dateEnd', validatedFilters.dateEnd.toString())
+      params.append('dateEnd', validatedFilters.dateEnd.toString())
     }
     if (validatedFilters.hasImages !== undefined) {
-      safeParams.append('hasImages', validatedFilters.hasImages.toString())
+      params.append('hasImages', validatedFilters.hasImages.toString())
     }
     if (validatedFilters.isHighlight !== undefined) {
-      safeParams.append('isHighlight', validatedFilters.isHighlight.toString())
+      params.append('isHighlight', validatedFilters.isHighlight.toString())
     }
     if (validatedFilters.isOnView !== undefined) {
-      safeParams.append('isOnView', validatedFilters.isOnView.toString())
+      params.append('isOnView', validatedFilters.isOnView.toString())
     }
 
-    const url = `${API_CONFIG.BASE_URL}/search?${safeParams.toString()}`
+    const url = `${API_CONFIG.BASE_URL}/search?${params.toString()}`
     
     const response = await fetch(url, {
-      next: { revalidate: 300 }, // Cache for 5 minutes
+      next: { revalidate: 300 },
     })
 
     if (!response.ok) {

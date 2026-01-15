@@ -36,7 +36,6 @@ export function SearchBar() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [focusedHistoryIndex, setFocusedHistoryIndex] = useState(-1)
   
-  // Refs to prevent circular updates
   const isUserInputRef = useRef(false)
   const isClearingRef = useRef(false)
   const isHistorySelectRef = useRef(false)
@@ -48,20 +47,16 @@ export function SearchBar() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const historyDropdownRef = useRef<HTMLDivElement>(null)
   
-  // Keep ref in sync with query
   useEffect(() => {
     currentQueryRef.current = query
   }, [query])
 
-  // Save to history only when search is stable
   useEffect(() => {
-    // Clear any pending history save
     if (historySaveTimeoutRef.current) {
       clearTimeout(historySaveTimeoutRef.current)
       historySaveTimeoutRef.current = null
     }
 
-    // Skip if clearing or query is empty
     if (isClearingRef.current) {
       lastSavedQueryRef.current = ''
       return
@@ -73,21 +68,17 @@ export function SearchBar() {
       return
     }
 
-    // Only save if query is different from last saved query
     if (trimmedQuery === lastSavedQueryRef.current) {
       return
     }
 
-    // Wait 2 seconds after query stabilizes before saving to history
-    // This ensures we only save when user has finished their search
     historySaveTimeoutRef.current = setTimeout(() => {
       const currentTrimmedQuery = currentQueryRef.current.trim()
-      // Double-check query hasn't changed during the delay
       if (currentTrimmedQuery && currentTrimmedQuery === trimmedQuery && currentTrimmedQuery !== lastSavedQueryRef.current) {
         addToHistory(currentTrimmedQuery)
         lastSavedQueryRef.current = currentTrimmedQuery
       }
-    }, 2000) // 2 seconds after debounce completes
+    }, UI_CONFIG.HISTORY_SAVE_DELAY)
 
     return () => {
       if (historySaveTimeoutRef.current) {
@@ -118,7 +109,6 @@ export function SearchBar() {
     }
   }, [isHistoryOpen])
 
-  // Handle keyboard navigation in history dropdown
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isHistoryOpen || history.length === 0) return
@@ -152,10 +142,7 @@ export function SearchBar() {
     }
   }, [isHistoryOpen, history, focusedHistoryIndex])
 
-  // Sync from URL only on external navigation (browser back/forward, direct URL)
-  // Skip when user is actively typing or clearing
   useEffect(() => {
-    // Don't sync from URL if user is currently typing, clearing, or selecting from history
     if (isUserInputRef.current || isClearingRef.current || isHistorySelectRef.current) {
       return
     }
@@ -166,24 +153,18 @@ export function SearchBar() {
     const validatedQuery = result.success ? result.data : ''
     const trimmedStoreQuery = query.trim()
 
-    // Only sync if URL actually differs from current state
     if (validatedQuery !== trimmedStoreQuery) {
       setLocalQuery(validatedQuery)
       setQuery(validatedQuery)
     }
   }, [searchParams, query, setQuery])
 
-  // Debounce search query updates to reduce API requests
-  // This effect only updates the store (which triggers API calls)
-  // Only runs when localQuery changes (user typing), not when query changes
   useEffect(() => {
-    // Skip if we're clearing (handleClear will handle everything)
     if (isClearingRef.current) {
       isClearingRef.current = false
       return
     }
 
-    // Clear any pending debounce
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current)
     }

@@ -35,10 +35,9 @@ export function useFeaturedArtworks() {
       return validArtworks
     },
     staleTime: REACT_QUERY_CONFIG.STALE_TIME,
-    // Featured artworks are relatively static, so use longer cache time
-    gcTime: REACT_QUERY_CONFIG.CACHE_TIME * 2, // 20 minutes
+    gcTime: REACT_QUERY_CONFIG.CACHE_TIME * 2,
     retry: REACT_QUERY_CONFIG.RETRY,
-    refetchOnWindowFocus: false, // Never refetch on focus for featured artworks
-    refetchOnMount: false, // Don't refetch if data exists in cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   })
 }

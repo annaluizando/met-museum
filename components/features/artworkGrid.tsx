@@ -65,7 +65,6 @@ export function ArtworkGrid() {
     return () => observer.disconnect()
   }, [handleObserver, shouldVirtualize])
 
-  // Handle view mode transition animation
   useEffect(() => {
     setIsTransitioning(true)
     const timer = setTimeout(() => setIsTransitioning(false), 500)
