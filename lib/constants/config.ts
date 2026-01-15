@@ -27,8 +27,9 @@ export const REACT_QUERY_CONFIG = {
 // UI Configuration
 export const UI_CONFIG = {
   SKELETON_COUNT: 12,
-  DEBOUNCE_DELAY: 300,
+  DEBOUNCE_DELAY: 600,
   IMAGE_FALLBACK: '/placeholder-artwork.jpg',
+  SEARCH_HISTORY_LIMIT: 10, // Maximum number of search history items to store
 } as const
 
 export const ERROR_MESSAGES = {
