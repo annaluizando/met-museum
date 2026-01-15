@@ -70,13 +70,24 @@ export function Carousel({
     if (!scrollContainerRef.current) return
 
     const container = scrollContainerRef.current
-    const itemWidth = container.scrollWidth / itemCount
-    const scrollAmount = itemWidth * 2 // Scroll 2 items at a time
+    const containerWidth = container.clientWidth
+    const currentScroll = container.scrollLeft
+    
+    // Scroll by 85% of container width to ensure overlap and prevent skipping items
+    // This ensures we always show some of the previous items and don't skip any
+    const scrollAmount = containerWidth * 0.85
 
-    const newScrollLeft =
-      direction === 'left'
-        ? container.scrollLeft - scrollAmount
-        : container.scrollLeft + scrollAmount
+    let newScrollLeft: number
+    if (direction === 'right') {
+      newScrollLeft = currentScroll + scrollAmount
+      // Don't scroll past the end
+      const maxScroll = container.scrollWidth - containerWidth
+      newScrollLeft = Math.min(newScrollLeft, maxScroll)
+    } else {
+      newScrollLeft = currentScroll - scrollAmount
+      // Don't scroll before the start
+      newScrollLeft = Math.max(newScrollLeft, 0)
+    }
 
     container.scrollTo({
       left: newScrollLeft,
