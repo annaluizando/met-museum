@@ -1,6 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/nextjs'
-import { EmptyState } from '@/components/features/empty-state'
-import { fn } from '@storybook/test'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { EmptyState } from '@/components/features/empty-state';
 
 const meta = {
   title: 'Features/EmptyState',
@@ -15,60 +14,79 @@ const meta = {
       options: ['search', 'collection', 'error'],
       description: 'The type of empty state to display',
     },
+    title: {
+      control: 'text',
+      description: 'The title text',
+    },
+    description: {
+      control: 'text',
+      description: 'The description text',
+    },
   },
-} satisfies Meta<typeof EmptyState>
+} satisfies Meta<typeof EmptyState>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-export const Search: Story = {
+/**
+ * Empty state for search results when no artworks are found
+ */
+export const SearchEmpty: Story = {
   args: {
     type: 'search',
     title: 'No artworks found',
-    description: 'We couldn\'t find any artworks matching your search. Try adjusting your search terms or filters.',
+    description: "We couldn't find any artworks matching your search. Try adjusting your search terms or filters.",
   },
-}
+};
 
-export const Collection: Story = {
+/**
+ * Empty state for empty collections
+ */
+export const CollectionEmpty: Story = {
   args: {
     type: 'collection',
-    title: 'No collections yet',
-    description: 'Start building your personal art collection by creating your first collection.',
+    title: 'No artworks in collection',
+    description: 'Start building your collection by adding artworks you love. Browse the gallery and click the heart icon to add pieces.',
     action: {
-      label: 'Create Collection',
-      onClick: fn(),
+      label: 'Browse Artworks',
+      onClick: () => console.log('Browse clicked'),
     },
   },
-}
+};
 
-export const Error: Story = {
-  args: {
-    type: 'error',
-    title: 'Something went wrong',
-    description: 'We encountered an error while loading the data. Please try again later.',
-    action: {
-      label: 'Retry',
-      onClick: fn(),
-    },
-  },
-}
-
+/**
+ * Empty state with action button
+ */
 export const WithAction: Story = {
   args: {
     type: 'search',
-    title: 'Start your exploration',
-    description: 'Search for artworks, artists, cultures, or time periods from The Metropolitan Museum of Art\'s collection.',
+    title: 'No results found',
+    description: "We couldn't find any artworks matching your search. Try a different search term or browse our featured collection.",
     action: {
-      label: 'Browse All Artworks',
-      onClick: fn(),
+      label: 'View Featured Artworks',
+      onClick: () => console.log('View featured clicked'),
     },
   },
-}
+};
 
+/**
+ * Empty state without action button
+ */
 export const WithoutAction: Story = {
   args: {
     type: 'search',
     title: 'No results',
-    description: 'Your search didn\'t return any results. Try using different keywords.',
+    description: "We couldn't find any artworks matching your search criteria.",
   },
-}
+};
+
+/**
+ * Error type empty state
+ */
+export const ErrorType: Story = {
+  args: {
+    type: 'error',
+    title: 'Something went wrong',
+    description: 'We encountered an issue while loading your content. Please try again later.',
+  },
+};

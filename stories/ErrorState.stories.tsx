@@ -1,6 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/nextjs'
-import { ErrorState } from '@/components/features/error-state'
-import { fn } from '@storybook/test'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { ErrorState } from '@/components/features/error-state';
 
 const meta = {
   title: 'Features/ErrorState',
@@ -18,46 +17,55 @@ const meta = {
       control: 'text',
       description: 'The error message',
     },
+    onRetry: {
+      action: 'retry',
+      description: 'Callback function when retry button is clicked',
+    },
   },
-} satisfies Meta<typeof ErrorState>
+} satisfies Meta<typeof ErrorState>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
+/**
+ * Default error state with retry functionality
+ */
 export const Default: Story = {
   args: {
+    title: 'Something went wrong',
     message: 'Failed to load artworks. Please try again.',
-    onRetry: fn(),
+    onRetry: () => console.log('Retry clicked'),
   },
-}
+};
 
+/**
+ * Error state with custom title
+ */
 export const CustomTitle: Story = {
   args: {
-    title: 'Network Error',
+    title: 'Connection Error',
     message: 'Unable to connect to the server. Please check your internet connection and try again.',
-    onRetry: fn(),
+    onRetry: () => console.log('Retry clicked'),
   },
-}
+};
 
+/**
+ * Error state without retry button
+ */
 export const WithoutRetry: Story = {
   args: {
-    title: 'Not Found',
-    message: 'The artwork you\'re looking for doesn\'t exist or has been removed.',
+    title: 'Service Unavailable',
+    message: 'The service is temporarily unavailable. Please try again later.',
   },
-}
+};
 
-export const APIError: Story = {
+/**
+ * Network error state
+ */
+export const NetworkError: Story = {
   args: {
-    title: 'API Error',
-    message: 'The Metropolitan Museum API is currently unavailable. Please try again in a few moments.',
-    onRetry: fn(),
+    title: 'Network Error',
+    message: 'Failed to fetch data from the server. Please check your connection and try again.',
+    onRetry: () => console.log('Retry clicked'),
   },
-}
-
-export const LongMessage: Story = {
-  args: {
-    title: 'Unexpected Error',
-    message: 'An unexpected error occurred while processing your request. This might be due to a temporary issue with our servers or your internet connection. Please wait a moment and try again. If the problem persists, please contact support.',
-    onRetry: fn(),
-  },
-}
+};

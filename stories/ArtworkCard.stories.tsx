@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/nextjs'
-import { ArtworkCard } from '@/components/features/artwork-card'
-import type { ArtworkObject } from '@/lib/types/artwork'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { ArtworkCard } from '@/components/features/artwork-card';
+import { ArtworkCardSkeleton } from '@/components/features/artwork-card-skeleton';
+import type { ArtworkObject } from '@/lib/types/artwork';
 
 const meta = {
   title: 'Features/ArtworkCard',
@@ -23,10 +24,10 @@ const meta = {
       description: 'Display mode for the artwork card',
     },
   },
-} satisfies Meta<typeof ArtworkCard>
+} satisfies Meta<typeof ArtworkCard>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const mockArtwork: ArtworkObject = {
   objectID: 437133,
@@ -86,15 +87,21 @@ const mockArtwork: ArtworkObject = {
   objectWikidata_URL: 'https://www.wikidata.org/wiki/Q29910832',
   isTimelineWork: false,
   GalleryNumber: '',
-}
+};
 
+/**
+ * Artwork card with data in grid view
+ */
 export const WithData: Story = {
   args: {
     artwork: mockArtwork,
     viewMode: 'grid',
   },
-}
+};
 
+/**
+ * Artwork card in list view
+ */
 export const ListView: Story = {
   args: {
     artwork: mockArtwork,
@@ -107,8 +114,41 @@ export const ListView: Story = {
       </div>
     ),
   ],
-}
+};
 
+/**
+ * Loading state - grid view skeleton
+ */
+export const LoadingGrid: Story = {
+  args: {
+    artwork: mockArtwork,
+    viewMode: 'grid',
+  },
+  render: () => (
+    <div className="max-w-sm">
+      <ArtworkCardSkeleton viewMode="grid" />
+    </div>
+  ),
+};
+
+/**
+ * Loading state - list view skeleton
+ */
+export const LoadingList: Story = {
+  args: {
+    artwork: mockArtwork,
+    viewMode: 'list',
+  },
+  render: () => (
+    <div className="max-w-3xl">
+      <ArtworkCardSkeleton viewMode="list" />
+    </div>
+  ),
+};
+
+/**
+ * Artwork card without image
+ */
 export const NoImage: Story = {
   args: {
     artwork: {
@@ -118,8 +158,11 @@ export const NoImage: Story = {
     },
     viewMode: 'grid',
   },
-}
+};
 
+/**
+ * Artwork card not in public domain
+ */
 export const NotPublicDomain: Story = {
   args: {
     artwork: {
@@ -128,8 +171,11 @@ export const NotPublicDomain: Story = {
     },
     viewMode: 'grid',
   },
-}
+};
 
+/**
+ * Artwork card with long title
+ */
 export const LongTitle: Story = {
   args: {
     artwork: {
@@ -138,8 +184,11 @@ export const LongTitle: Story = {
     },
     viewMode: 'grid',
   },
-}
+};
 
+/**
+ * Artwork card with unknown artist
+ */
 export const UnknownArtist: Story = {
   args: {
     artwork: {
@@ -148,22 +197,4 @@ export const UnknownArtist: Story = {
     },
     viewMode: 'grid',
   },
-}
-
-export const Loading: Story = {
-  render: () => {
-    const { ArtworkCardSkeleton } = require('@/components/features/artwork-card-skeleton')
-    return <ArtworkCardSkeleton viewMode="grid" />
-  },
-}
-
-export const LoadingList: Story = {
-  render: () => {
-    const { ArtworkCardSkeleton } = require('@/components/features/artwork-card-skeleton')
-    return (
-      <div className="max-w-3xl">
-        <ArtworkCardSkeleton viewMode="list" />
-      </div>
-    )
-  },
-}
+};
