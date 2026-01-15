@@ -65,41 +65,52 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     resetFilters()
   }, [resetFilters])
 
+  const sanitizeFilterValue = useCallback(<K extends keyof SearchFilters>(
+    key: K,
+    value: SearchFilters[K]
+  ): SearchFilters[K] | undefined => {
+    const convertToNumber = (val: unknown): number | null => {
+      if (typeof val === 'number') return val
+      if (typeof val === 'string' && val !== '') return Number(val)
+      return null
+    }
+
+    if (key === 'medium' || key === 'geoLocation') {
+      if (typeof value !== 'string') return undefined
+      const sanitized = sanitizeString(value).substring(0, 200)
+      return (sanitized || undefined) as SearchFilters[K]
+    }
+
+    if (key === 'dateBegin' || key === 'dateEnd') {
+      const numValue = convertToNumber(value)
+      if (numValue === null) return undefined
+      const sanitized = sanitizeNumber(numValue, -5000, new Date().getFullYear())
+      return (sanitized ?? undefined) as SearchFilters[K]
+    }
+
+    if (key === 'departmentId') {
+      const numValue = convertToNumber(value)
+      if (numValue === null) return undefined
+      const sanitized = sanitizeNumber(numValue, 1)
+      return (sanitized ?? undefined) as SearchFilters[K]
+    }
+
+    return value
+  }, [])
+
   const updateFilter = useCallback(<K extends keyof SearchFilters>(
     key: K,
     value: SearchFilters[K]
   ) => {
-      setLocalFilters(prev => {
-        let sanitizedValue: SearchFilters[K] = value
-        
-        if (key === 'medium' || key === 'geoLocation') {
-        if (typeof value === 'string') {
-          sanitizedValue = sanitizeString(value).substring(0, 200) as SearchFilters[K]
-        }
-      } else if (key === 'dateBegin' || key === 'dateEnd') {
-        if (typeof value === 'number') {
-          const sanitized = sanitizeNumber(value, -5000, new Date().getFullYear())
-          sanitizedValue = (sanitized ?? undefined) as SearchFilters[K]
-        } else if (typeof value === 'string' && value !== '') {
-          const num = sanitizeNumber(Number(value), -5000, new Date().getFullYear())
-          sanitizedValue = (num ?? undefined) as SearchFilters[K]
-        }
-      } else if (key === 'departmentId') {
-        if (typeof value === 'number') {
-          const sanitized = sanitizeNumber(value, 1)
-          sanitizedValue = (sanitized ?? undefined) as SearchFilters[K]
-        } else if (typeof value === 'string' && value !== '') {
-          const num = sanitizeNumber(Number(value), 1)
-          sanitizedValue = (num ?? undefined) as SearchFilters[K]
-        }
-      }
+    setLocalFilters(prev => {
+      const sanitizedValue = sanitizeFilterValue(key, value)
       
       return {
         ...prev,
         [key]: sanitizedValue === '' || sanitizedValue === undefined ? undefined : sanitizedValue
       }
     })
-  }, [])
+  }, [sanitizeFilterValue])
 
   const setDateRange = useCallback((begin: number, end: number) => {
     const sanitizedBegin = sanitizeNumber(begin, -5000, new Date().getFullYear())
