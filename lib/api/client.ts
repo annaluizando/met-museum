@@ -23,13 +23,51 @@ const delay = (ms: number): Promise<void> =>
   new Promise(resolve => setTimeout(resolve, ms))
 
 /**
+ * Check if code is running on the client side
+ */
+const isClient = typeof window !== 'undefined'
+
+/**
+ * Map API endpoints to Next.js Route Handler proxies for client-side requests
+ * 
+ * Strategy:
+ * - Client Components: Route through /api/* proxies to avoid CORS
+ * - Server Components: Use direct API calls (faster, no proxy overhead)
+ * 
+ * @see https://nextjs.org/docs/app/guides/backend-for-frontend
+ */
+function getApiUrl(endpoint: string): string {
+  // Server-side
+  if (!isClient) {
+    return `${API_CONFIG.BASE_URL}${endpoint}`
+  }
+
+  // Client-side: route through Next.js Route Handlers to avoid CORS
+  if (endpoint.startsWith('/objects/')) {
+    return `/api${endpoint}`
+  }
+  if (endpoint.startsWith('/search')) {
+    return `/api${endpoint}`
+  }
+  if (endpoint.startsWith('/departments')) {
+    return `/api${endpoint}`
+  }
+
+  // Fallback
+  return `${API_CONFIG.BASE_URL}${endpoint}`
+}
+
+/**
  * Generic fetch wrapper with error handling, timeout, and retry logic
+ * 
+ * Automatically routes client-side requests through Next.js Route Handlers
+ * to prevent CORS issues, while server-side requests use direct API calls.
  */
 export async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`
+  const url = getApiUrl(endpoint)
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT)
 
