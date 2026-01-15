@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { SearchFiltersPanel } from './search-filters'
 import { UI_CONFIG } from '@/lib/constants/config'
+import { searchQuerySchema } from '@/lib/validations/search'
+import { sanitizeSearchQuery, sanitizeString } from '@/lib/utils/sanitize'
 
 /**
  * Search bar with debounce, view mode toggle, and advanced filters
@@ -20,9 +22,11 @@ export function SearchBar() {
   const pathname = usePathname()
   const { query, setQuery, viewMode, setViewMode, filters } = useSearchStore()
   const [localQuery, setLocalQuery] = useState(() => {
-    // Initialize from URL on mount
     if (typeof window !== 'undefined') {
-      return searchParams.get('q') || ''
+      const urlQuery = searchParams.get('q') || ''
+      const sanitized = sanitizeSearchQuery(urlQuery)
+      const result = searchQuerySchema.safeParse(sanitized)
+      return result.success ? result.data : ''
     }
     return ''
   })
@@ -49,13 +53,15 @@ export function SearchBar() {
     }
 
     const urlQuery = searchParams.get('q') || ''
-    const trimmedUrlQuery = urlQuery.trim()
+    const sanitized = sanitizeSearchQuery(urlQuery)
+    const result = searchQuerySchema.safeParse(sanitized)
+    const validatedQuery = result.success ? result.data : ''
     const trimmedStoreQuery = query.trim()
 
     // Only sync if URL actually differs from current state
-    if (trimmedUrlQuery !== trimmedStoreQuery) {
-      setLocalQuery(trimmedUrlQuery)
-      setQuery(trimmedUrlQuery)
+    if (validatedQuery !== trimmedStoreQuery) {
+      setLocalQuery(validatedQuery)
+      setQuery(validatedQuery)
     }
   }, [searchParams, query, setQuery])
 
@@ -79,11 +85,13 @@ export function SearchBar() {
 
     // Debounce the query update to the store
     debounceTimeoutRef.current = setTimeout(() => {
-      const trimmedQuery = localQuery.trim()
+      const sanitized = sanitizeSearchQuery(localQuery)
+      const result = searchQuerySchema.safeParse(sanitized)
+      const validatedQuery = result.success ? result.data : ''
       
       // Only update if different from current query (using ref to avoid dependency)
-      if (trimmedQuery !== currentQueryRef.current.trim()) {
-        setQuery(trimmedQuery)
+      if (validatedQuery !== currentQueryRef.current.trim()) {
+        setQuery(validatedQuery)
       }
 
       // Update URL after a short delay to batch URL updates
@@ -98,11 +106,11 @@ export function SearchBar() {
         const currentUrlQuery = new URLSearchParams(window.location.search).get('q') || ''
         
         // Only update URL if it actually changed
-        if (trimmedQuery !== currentUrlQuery.trim()) {
+        if (validatedQuery !== currentUrlQuery.trim()) {
           const params = new URLSearchParams(searchParams.toString())
           
-          if (trimmedQuery) {
-            params.set('q', trimmedQuery)
+          if (validatedQuery) {
+            params.set('q', sanitizeString(validatedQuery))
           } else {
             params.delete('q')
           }
@@ -199,7 +207,11 @@ export function SearchBar() {
             type="search"
             placeholder="Search by title, artist, or culture..."
             value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              setLocalQuery(value.length <= 500 ? value : localQuery)
+            }}
+            maxLength={500}
             className="pl-10 pr-10"
             aria-label="Search artworks by title, artist, or culture"
           />

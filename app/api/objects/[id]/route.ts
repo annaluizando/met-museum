@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { API_CONFIG } from '@/lib/constants/config'
+import { artworkIdSchema } from '@/lib/validations/artwork'
 
 /**
  * Route Handler: Proxy for fetching individual artwork by ID
@@ -9,6 +10,7 @@ import { API_CONFIG } from '@/lib/constants/config'
  * 
  * @see https://nextjs.org/docs/app/guides/backend-for-frontend
  */
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -16,14 +18,18 @@ export async function GET(
   try {
     const { id } = await params
     
-    if (!id || isNaN(Number(id))) {
+    const result = artworkIdSchema.safeParse(id)
+    
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Invalid artwork ID' },
+        { error: 'Invalid artwork ID. Must be a positive integer.' },
         { status: 400 }
       )
     }
+    
+    const sanitizedId = result.data
 
-    const url = `${API_CONFIG.BASE_URL}/objects/${id}`
+    const url = `${API_CONFIG.BASE_URL}/objects/${sanitizedId}`
     
     const response = await fetch(url, {
       next: { revalidate: 3600 }, // Cache for 1 hour

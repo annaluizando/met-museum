@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useCollectionsStore, type CollectionItem } from '@/lib/stores/collections-store'
+import { collectionFormSchema } from '@/lib/validations/collection'
+import { sanitizeString } from '@/lib/utils/sanitize'
 
 interface CollectionFormProps {
   collection?: CollectionItem | null
@@ -32,22 +34,34 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
   }, [collection])
 
   const validate = (): boolean => {
-    const newErrors: { name?: string; description?: string } = {}
+    // Sanitize inputs first
+    const sanitizedName = sanitizeString(name)
+    const sanitizedDescription = sanitizeString(description)
+    
+    // Validate using Zod schema
+    const result = collectionFormSchema.safeParse({
+      name: sanitizedName,
+      description: sanitizedDescription,
+    })
 
-    if (!name.trim()) {
-      newErrors.name = 'Collection name is required'
-    } else if (name.trim().length < 3) {
-      newErrors.name = 'Name must be at least 3 characters'
+    if (!result.success) {
+      const newErrors: { name?: string; description?: string } = {}
+      
+      // Extract field-specific errors from Zod
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0] === 'name') {
+          newErrors.name = issue.message
+        } else if (issue.path[0] === 'description') {
+          newErrors.description = issue.message
+        }
+      })
+      
+      setErrors(newErrors)
+      return false
     }
 
-    if (!description.trim()) {
-      newErrors.description = 'Description is required'
-    } else if (description.trim().length < 10) {
-      newErrors.description = 'Description must be at least 10 characters'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrors({})
+    return true
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,18 +71,30 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
       return
     }
 
+    // Sanitize and validate one more time before saving
+    const sanitizedName = sanitizeString(name)
+    const sanitizedDescription = sanitizeString(description)
+    const result = collectionFormSchema.safeParse({
+      name: sanitizedName,
+      description: sanitizedDescription,
+    })
+
+    if (!result.success) {
+      return
+    }
+
     if (collection) {
       // Update existing collection
       updateCollection(collection.id, {
-        name: name.trim(),
-        description: description.trim(),
+        name: result.data.name,
+        description: result.data.description,
       })
       onSuccess?.()
     } else {
       // Create new collection
       const collectionId = addCollection({
-        name: name.trim(),
-        description: description.trim(),
+        name: result.data.name,
+        description: result.data.description,
         artworkIds: [],
       })
       onSuccess?.(collectionId)
@@ -110,8 +136,12 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
               id="collection-name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setName(value.length <= 100 ? value : name)
+              }}
               placeholder="e.g., My Favorite Artworks"
+              maxLength={100}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'name-error' : undefined}
               className={errors.name ? 'border-red-500' : ''}
@@ -130,9 +160,13 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
             <Textarea
               id="collection-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setDescription(value.length <= 1000 ? value : description)
+              }}
               placeholder="Describe your collection..."
               rows={4}
+              maxLength={1000}
               aria-invalid={!!errors.description}
               aria-describedby={errors.description ? 'description-error' : undefined}
               className={errors.description ? 'border-red-500' : ''}

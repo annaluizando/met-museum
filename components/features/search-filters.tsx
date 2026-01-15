@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { useDepartments } from '@/lib/hooks/use-departments'
 import type { SearchFilters } from '@/lib/types/artwork'
+import { searchFiltersSchema } from '@/lib/validations/search'
+import { sanitizeString, sanitizeNumber } from '@/lib/utils/sanitize'
 
 interface SearchFiltersProps {
   isOpen: boolean
@@ -33,8 +35,34 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
   }, [filters])
 
   const handleApplyFilters = useCallback(() => {
-    setFilters(localFilters)
-    onClose()
+    // Validate all filters before applying
+    const result = searchFiltersSchema.safeParse(localFilters)
+    
+    if (result.success) {
+      setFilters(result.data)
+      onClose()
+    } else {
+      // If validation fails, still apply but with sanitized values
+      // This prevents blocking the user while ensuring security
+      const sanitizedFilters: SearchFilters = {
+        ...localFilters,
+        medium: localFilters.medium ? sanitizeString(localFilters.medium).substring(0, 200) : undefined,
+        geoLocation: localFilters.geoLocation ? sanitizeString(localFilters.geoLocation).substring(0, 200) : undefined,
+        dateBegin: localFilters.dateBegin !== undefined ? sanitizeNumber(localFilters.dateBegin, -5000, new Date().getFullYear()) ?? undefined : undefined,
+        dateEnd: localFilters.dateEnd !== undefined ? sanitizeNumber(localFilters.dateEnd, -5000, new Date().getFullYear()) ?? undefined : undefined,
+        departmentId: localFilters.departmentId !== undefined ? sanitizeNumber(localFilters.departmentId, 1) ?? undefined : undefined,
+      }
+      
+      // Ensure dateBegin <= dateEnd
+      if (sanitizedFilters.dateBegin !== undefined && sanitizedFilters.dateEnd !== undefined) {
+        if (sanitizedFilters.dateBegin > sanitizedFilters.dateEnd) {
+          sanitizedFilters.dateBegin = sanitizedFilters.dateEnd
+        }
+      }
+      
+      setFilters(sanitizedFilters)
+      onClose()
+    }
   }, [localFilters, setFilters, onClose])
 
   const handleResetFilters = useCallback(() => {
@@ -47,18 +75,54 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
     key: K,
     value: SearchFilters[K]
   ) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      [key]: value === '' || value === undefined ? undefined : value
-    }))
+    setLocalFilters(prev => {
+      let sanitizedValue: SearchFilters[K] = value
+      
+      // Sanitize based on field type
+      if (key === 'medium' || key === 'geoLocation') {
+        if (typeof value === 'string') {
+          sanitizedValue = sanitizeString(value).substring(0, 200) as SearchFilters[K]
+        }
+      } else if (key === 'dateBegin' || key === 'dateEnd') {
+        if (typeof value === 'number') {
+          const sanitized = sanitizeNumber(value, -5000, new Date().getFullYear())
+          sanitizedValue = (sanitized ?? undefined) as SearchFilters[K]
+        } else if (typeof value === 'string' && value !== '') {
+          const num = sanitizeNumber(Number(value), -5000, new Date().getFullYear())
+          sanitizedValue = (num ?? undefined) as SearchFilters[K]
+        }
+      } else if (key === 'departmentId') {
+        if (typeof value === 'number') {
+          const sanitized = sanitizeNumber(value, 1)
+          sanitizedValue = (sanitized ?? undefined) as SearchFilters[K]
+        } else if (typeof value === 'string' && value !== '') {
+          const num = sanitizeNumber(Number(value), 1)
+          sanitizedValue = (num ?? undefined) as SearchFilters[K]
+        }
+      }
+      
+      return {
+        ...prev,
+        [key]: sanitizedValue === '' || sanitizedValue === undefined ? undefined : sanitizedValue
+      }
+    })
   }, [])
 
   const setDateRange = useCallback((begin: number, end: number) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      dateBegin: begin,
-      dateEnd: end
-    }))
+    const sanitizedBegin = sanitizeNumber(begin, -5000, new Date().getFullYear())
+    const sanitizedEnd = sanitizeNumber(end, -5000, new Date().getFullYear())
+    
+    if (sanitizedBegin !== null && sanitizedEnd !== null) {
+      // Ensure begin <= end
+      const finalBegin = Math.min(sanitizedBegin, sanitizedEnd)
+      const finalEnd = Math.max(sanitizedBegin, sanitizedEnd)
+      
+      setLocalFilters(prev => ({
+        ...prev,
+        dateBegin: finalBegin,
+        dateEnd: finalEnd
+      }))
+    }
   }, [])
 
   const departmentOptions = departmentsData?.departments.map(dept => ({
@@ -118,6 +182,7 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
                 placeholder="e.g., Oil on canvas"
                 value={localFilters.medium || ''}
                 onChange={(e) => updateFilter('medium', e.target.value)}
+                maxLength={200}
               />
               <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Artwork material or technique</p>
             </div>
@@ -131,6 +196,7 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
                 placeholder="e.g., France, China"
                 value={localFilters.geoLocation || ''}
                 onChange={(e) => updateFilter('geoLocation', e.target.value)}
+                maxLength={200}
               />
               <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Country, region, or city of origin</p>
             </div>
@@ -147,7 +213,17 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
                     type="number"
                     placeholder="e.g., 1800"
                     value={localFilters.dateBegin ?? ''}
-                    onChange={(e) => updateFilter('dateBegin', e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '') {
+                        updateFilter('dateBegin', undefined)
+                      } else {
+                        const num = Number(value)
+                        if (!isNaN(num)) {
+                          updateFilter('dateBegin', num)
+                        }
+                      }
+                    }}
                     min="-5000"
                     max={localFilters.dateEnd || new Date().getFullYear()}
                     aria-label="From year"
@@ -164,7 +240,17 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
                     type="number"
                     placeholder="e.g., 1900"
                     value={localFilters.dateEnd ?? ''}
-                    onChange={(e) => updateFilter('dateEnd', e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '') {
+                        updateFilter('dateEnd', undefined)
+                      } else {
+                        const num = Number(value)
+                        if (!isNaN(num)) {
+                          updateFilter('dateEnd', num)
+                        }
+                      }
+                    }}
                     min={localFilters.dateBegin || -5000}
                     max={new Date().getFullYear()}
                     aria-label="To year"
