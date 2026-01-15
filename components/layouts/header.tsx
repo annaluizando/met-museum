@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Library } from 'lucide-react'
+import { Library, Search, Folder } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/themeToggle'
 import { cn } from '@/lib/utils/cn'
 
 const navigation = [
-  { name: 'Explore', href: '/' },
-  { name: 'Collections', href: '/collections' },
+  { name: 'Explore', href: '/', icon: Search },
+  { name: 'Collections', href: '/collections', icon: Folder },
 ]
 
 /**
@@ -36,19 +36,25 @@ export function Header() {
           <div className="flex items-center gap-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const Icon = item.icon
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "px-4 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
+                    "rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
+                    "flex items-center justify-center",
                     isActive
                       ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
+                    // Mobile: icon only, Desktop: text with icon
+                    "w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2"
                   )}
                   aria-current={isActive ? 'page' : undefined}
+                  aria-label={item.name}
                 >
-                  {item.name}
+                  <Icon className="w-5 h-5 sm:mr-2 sm:w-4 sm:h-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">{item.name}</span>
                 </Link>
               )
             })}
