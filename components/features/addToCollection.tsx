@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Toast } from '@/components/ui/toast'
 import { useCollectionsStore } from '@/lib/stores/collections-store'
+import { createFocusTrapHandler } from '@/lib/utils/focus-trap'
 import { CollectionForm } from './collectionForm'
 
 interface AddToCollectionProps {
@@ -41,34 +42,7 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
       // Store the previously focused element
       previousActiveElementRef.current = document.activeElement as HTMLElement
 
-      // Focus trap: keep focus within the modal
-      const handleTabKey = (e: KeyboardEvent) => {
-        if (e.key !== 'Tab') return
-
-        const modal = modalRef.current
-        if (!modal) return
-
-        const focusableElements = modal.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const firstElement = focusableElements[0]
-        const lastElement = focusableElements[focusableElements.length - 1]
-
-        if (e.shiftKey) {
-          // Shift + Tab
-          if (document.activeElement === firstElement) {
-            e.preventDefault()
-            lastElement?.focus()
-          }
-        } else {
-          // Tab
-          if (document.activeElement === lastElement) {
-            e.preventDefault()
-            firstElement?.focus()
-          }
-        }
-      }
-
+      const handleTabKey = createFocusTrapHandler(modalRef.current)
       document.addEventListener('keydown', handleTabKey)
 
       // Focus first focusable element when modal opens

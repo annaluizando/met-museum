@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { X, ZoomIn, ZoomOut, Maximize2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
+import { createFocusTrapHandler } from '@/lib/utils/focus-trap'
 
 interface ImageViewerProps {
   src: string
@@ -45,50 +46,32 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
     }, 100)
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsFullscreen(false)
-        setZoom(1)
-        setPosition({ x: 0, y: 0 })
-        setIsFullscreenImageLoading(false)
-        previousActiveElementRef.current?.focus()
-      } else if (e.key === '+' || e.key === '=') {
-        e.preventDefault()
-        setZoom((prev) => Math.min(prev + zoomStep, maxZoom))
-      } else if (e.key === '-') {
-        e.preventDefault()
-        setZoom((prev) => {
-          const newZoom = Math.max(prev - zoomStep, minZoom)
-          if (newZoom === minZoom) {
-            setPosition({ x: 0, y: 0 })
-          }
-          return newZoom
-        })
-      }
-
-      // Focus trap: keep focus within the dialog
-      if (e.key === 'Tab') {
-        const dialog = fullscreenDialogRef.current
-        if (!dialog) return
-
-        const focusableElements = dialog.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const firstElement = focusableElements[0]
-        const lastElement = focusableElements[focusableElements.length - 1]
-
-        if (e.shiftKey) {
-          // Shift + Tab
-          if (document.activeElement === firstElement) {
-            e.preventDefault()
-            lastElement?.focus()
-          }
-        } else {
-          // Tab
-          if (document.activeElement === lastElement) {
-            e.preventDefault()
-            firstElement?.focus()
-          }
-        }
+      switch (e.key) {
+        case 'Escape':
+          setIsFullscreen(false)
+          setZoom(1)
+          setPosition({ x: 0, y: 0 })
+          setIsFullscreenImageLoading(false)
+          previousActiveElementRef.current?.focus()
+          break
+        case '+':
+        case '=':
+          e.preventDefault()
+          setZoom((prev) => Math.min(prev + zoomStep, maxZoom))
+          break
+        case '-':
+          e.preventDefault()
+          setZoom((prev) => {
+            const newZoom = Math.max(prev - zoomStep, minZoom)
+            if (newZoom === minZoom) {
+              setPosition({ x: 0, y: 0 })
+            }
+            return newZoom
+          })
+          break
+        case 'Tab':
+          createFocusTrapHandler(fullscreenDialogRef.current)(e)
+          break
       }
     }
 

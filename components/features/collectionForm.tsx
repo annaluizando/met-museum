@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useCollectionsStore, type CollectionItem } from '@/lib/stores/collections-store'
 import { collectionFormSchema } from '@/lib/validations/collection'
 import { sanitizeString } from '@/lib/utils/sanitize'
+import { createFocusTrapHandler } from '@/lib/utils/focus-trap'
 
 interface CollectionFormProps {
   collection?: CollectionItem | null
@@ -46,34 +47,7 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
       nameInputRef.current?.focus()
     }, 100)
 
-    // Focus trap: keep focus within the dialog
-    const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
-
-      const dialog = dialogRef.current
-      if (!dialog) return
-
-      const focusableElements = dialog.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
-      const firstElement = focusableElements[0]
-      const lastElement = focusableElements[focusableElements.length - 1]
-
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstElement) {
-          e.preventDefault()
-          lastElement?.focus()
-        }
-      } else {
-        // Tab
-        if (document.activeElement === lastElement) {
-          e.preventDefault()
-          firstElement?.focus()
-        }
-      }
-    }
-
+    const handleTabKey = createFocusTrapHandler(dialogRef.current)
     document.addEventListener('keydown', handleTabKey)
 
     return () => {

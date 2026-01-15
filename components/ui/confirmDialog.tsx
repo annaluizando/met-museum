@@ -4,6 +4,7 @@ import { X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useEffect, useRef } from 'react'
+import { createFocusTrapHandler } from '@/lib/utils/focus-trap'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -50,30 +51,9 @@ export function ConfirmDialog({
         return
       }
 
-      // Focus trap: keep focus within the dialog
       if (e.key === 'Tab') {
-        const dialog = dialogRef.current
-        if (!dialog) return
-
-        const focusableElements = dialog.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const firstElement = focusableElements[0]
-        const lastElement = focusableElements[focusableElements.length - 1]
-
-        if (e.shiftKey) {
-          // Shift + Tab
-          if (document.activeElement === firstElement) {
-            e.preventDefault()
-            lastElement?.focus()
-          }
-        } else {
-          // Tab
-          if (document.activeElement === lastElement) {
-            e.preventDefault()
-            firstElement?.focus()
-          }
-        }
+        const trapHandler = createFocusTrapHandler(dialogRef.current)
+        trapHandler(e)
       }
     }
 
