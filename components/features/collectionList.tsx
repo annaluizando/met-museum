@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Plus, Trash2, Edit, Eye } from 'lucide-react'
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ConfirmDialog } from '@/components/ui/confirmDialog'
 import { CollectionForm } from './collectionForm'
 import { EmptyState } from './emptyState'
+import { Toast } from '@/components/ui/toast'
 import { useCollectionsStore, type CollectionItem } from '@/lib/stores/collections-store'
 import { batchGetArtworks } from '@/lib/api/artworks'
 import { useQuery } from '@tanstack/react-query'
@@ -29,6 +31,7 @@ export function CollectionList() {
   const [editingCollection, setEditingCollection] = useState<CollectionItem | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -170,6 +173,20 @@ export function CollectionList() {
         <CollectionForm
           collection={editingCollection}
           onClose={handleCloseForm}
+          onSuccess={(collectionId) => {
+            if (collectionId) {
+              const { collections: updatedCollections } = useCollectionsStore.getState()
+              const created = updatedCollections.find(c => c.id === collectionId)
+              if (created) {
+                setToastMessage(`Collection "${created.name}" was created`)
+              } else {
+                setToastMessage('New collection was created')
+              }
+            } else if (editingCollection) {
+              setToastMessage(`Collection "${editingCollection.name}" was updated`)
+            }
+            handleCloseForm()
+          }}
         />
       )}
 
@@ -186,6 +203,14 @@ export function CollectionList() {
           onCancel={() => setDeleteConfirm(null)}
         />
       )}
+      {toastMessage &&
+        createPortal(
+          <Toast
+            message={toastMessage}
+            onClose={() => setToastMessage(null)}
+          />,
+          document.body
+        )}
     </div>
   )
 }
