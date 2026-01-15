@@ -59,10 +59,14 @@ export function useArtworkSearch({
         (artwork): artwork is ArtworkObject => artwork !== null
       )
 
+      const filteredArtworks = filters?.hasImages === true
+        ? validArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
+        : validArtworks
+
       // Sort artworks: those with images first, then those without
       // Only sort if hasImages filter is not explicitly set (allows users to filter if they want)
       const sortedArtworks = filters?.hasImages === undefined
-        ? validArtworks.sort((a, b) => {
+        ? filteredArtworks.sort((a, b) => {
             const aHasImage = !!(a.primaryImage || a.primaryImageSmall)
             const bHasImage = !!(b.primaryImage || b.primaryImageSmall)
             
@@ -71,7 +75,7 @@ export function useArtworkSearch({
             if (aHasImage && !bHasImage) return -1
             return 1
           })
-        : validArtworks
+        : filteredArtworks
 
       const hasMore = endIndex < searchResults.objectIDs.length
 
