@@ -209,7 +209,9 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
               {/* Date Inputs */}
               <div className="flex items-center gap-2">
                 <div className="flex-1">
+                  <Label htmlFor="date-begin-filter" className="sr-only">From year</Label>
                   <Input
+                    id="date-begin-filter"
                     type="number"
                     placeholder="e.g., 1800"
                     value={localFilters.dateBegin ?? ''}
@@ -230,13 +232,15 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
                   />
                   <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">From year</p>
                 </div>
-                <div className="flex items-center justify-center w-8 h-10 text-zinc-400 dark:text-zinc-500">
+                <div className="flex items-center justify-center w-8 h-10 text-zinc-400 dark:text-zinc-500" aria-hidden="true">
                   <svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <line x1="0" y1="1" x2="12" y2="1" stroke="currentColor" strokeWidth="2"/>
                   </svg>
                 </div>
                 <div className="flex-1">
+                  <Label htmlFor="date-end-filter" className="sr-only">To year</Label>
                   <Input
+                    id="date-end-filter"
                     type="number"
                     placeholder="e.g., 1900"
                     value={localFilters.dateEnd ?? ''}
@@ -260,39 +264,44 @@ export function SearchFiltersPanel({ isOpen, onClose }: SearchFiltersProps) {
               </div>
 
               {/* Quick Presets */}
-              <div className="flex flex-wrap justify-center gap-1.5">
+              <div className="flex flex-wrap justify-center gap-1.5" role="group" aria-label="Date range presets">
                 <button
                   type="button"
                   onClick={() => setDateRange(1800, 1900)}
-                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors"
+                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                  aria-label="Set date range to 19th Century (1800-1900)"
                 >
                   19th Century
                 </button>
                 <button
                   type="button"
                   onClick={() => setDateRange(1900, 2000)}
-                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors"
+                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                  aria-label="Set date range to 20th Century (1900-2000)"
                 >
                   20th Century
                 </button>
                 <button
                   type="button"
                   onClick={() => setDateRange(2000, new Date().getFullYear())}
-                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors"
+                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                  aria-label={`Set date range to Contemporary (2000-${new Date().getFullYear()})`}
                 >
                   Contemporary
                 </button>
                 <button
                   type="button"
                   onClick={() => setDateRange(1400, 1600)}
-                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors"
+                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                  aria-label="Set date range to Renaissance (1400-1600)"
                 >
                   Renaissance
                 </button>
                 <button
                   type="button"
                   onClick={() => { updateFilter('dateBegin', undefined); updateFilter('dateEnd', undefined); }}
-                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors"
+                  className="cursor-pointer px-2 py-1 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                  aria-label="Clear date range"
                 >
                   Clear
                 </button>

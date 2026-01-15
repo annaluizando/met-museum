@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Plus, X, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,18 +25,68 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   const [isCreating, setIsCreating] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousActiveElementRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open and manage focus
   useEffect(() => {
     if (isOpen || isCreating) {
       const originalOverflow = document.body.style.overflow
       document.body.style.overflow = 'hidden'
+
+      // Store the previously focused element
+      previousActiveElementRef.current = document.activeElement as HTMLElement
+
+      // Focus trap: keep focus within the modal
+      const handleTabKey = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab') return
+
+        const modal = modalRef.current
+        if (!modal) return
+
+        const focusableElements = modal.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey) {
+          // Shift + Tab
+          if (document.activeElement === firstElement) {
+            e.preventDefault()
+            lastElement?.focus()
+          }
+        } else {
+          // Tab
+          if (document.activeElement === lastElement) {
+            e.preventDefault()
+            firstElement?.focus()
+          }
+        }
+      }
+
+      document.addEventListener('keydown', handleTabKey)
+
+      // Focus first focusable element when modal opens
+      const timer = setTimeout(() => {
+        const modal = modalRef.current
+        if (modal) {
+          const firstFocusable = modal.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          )
+          firstFocusable?.focus()
+        }
+      }, 100)
+
       return () => {
+        clearTimeout(timer)
+        document.removeEventListener('keydown', handleTabKey)
         document.body.style.overflow = originalOverflow
+        previousActiveElementRef.current?.focus()
       }
     }
   }, [isOpen, isCreating])
@@ -126,13 +176,17 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
         className="fixed inset-0 z-30 flex items-center justify-center p-4 pointer-events-none"
       >
         <Card 
+          ref={modalRef}
           className="bg-white dark:bg-zinc-900 rounded-lg shadow-[0_25px_70px_-12px_rgba(0,0,0,0.35),0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-[0_25px_70px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.1)] border border-zinc-200 dark:border-zinc-800 w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto animate-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-labelledby="add-to-collection-title"
+          aria-modal="true"
         >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-800 bg-linear-to-r from-zinc-50 to-white dark:from-zinc-900 dark:to-zinc-800">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-200">
+            <h2 id="add-to-collection-title" className="text-xl font-semibold text-zinc-900 dark:text-zinc-200">
               Add to Collection
             </h2>
             {artworkTitle && (

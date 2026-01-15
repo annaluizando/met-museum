@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { X, ZoomIn, ZoomOut, Maximize2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,9 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(true)
+  const fullscreenDialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousActiveElementRef = useRef<HTMLElement | null>(null)
 
   const minZoom = 1
   const maxZoom = 4
@@ -33,12 +36,21 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
   useEffect(() => {
     if (!isFullscreen) return
 
+    // Store the previously focused element
+    previousActiveElementRef.current = document.activeElement as HTMLElement
+
+    // Focus the close button when fullscreen opens
+    const timer = setTimeout(() => {
+      closeButtonRef.current?.focus()
+    }, 100)
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsFullscreen(false)
         setZoom(1)
         setPosition({ x: 0, y: 0 })
         setIsFullscreenImageLoading(false)
+        previousActiveElementRef.current?.focus()
       } else if (e.key === '+' || e.key === '=') {
         e.preventDefault()
         setZoom((prev) => Math.min(prev + zoomStep, maxZoom))
@@ -52,11 +64,40 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
           return newZoom
         })
       }
+
+      // Focus trap: keep focus within the dialog
+      if (e.key === 'Tab') {
+        const dialog = fullscreenDialogRef.current
+        if (!dialog) return
+
+        const focusableElements = dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey) {
+          // Shift + Tab
+          if (document.activeElement === firstElement) {
+            e.preventDefault()
+            lastElement?.focus()
+          }
+        } else {
+          // Tab
+          if (document.activeElement === lastElement) {
+            e.preventDefault()
+            firstElement?.focus()
+          }
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isFullscreen])
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isFullscreen, zoomStep, maxZoom, minZoom])
 
   // Prevent body scroll when fullscreen
   useEffect(() => {
@@ -132,6 +173,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
       {/* Fullscreen Modal */}
       {isFullscreen && (
         <div
+          ref={fullscreenDialogRef}
           className="fixed inset-0 z-50 bg-black flex items-center justify-center"
           role="dialog"
           aria-modal="true"
@@ -174,6 +216,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
             </div>
 
             <Button
+              ref={closeButtonRef}
               variant="ghost"
               size="icon"
               onClick={() => {
@@ -181,6 +224,7 @@ export function ImageViewer({ src, alt, title }: ImageViewerProps) {
                 setZoom(1)
                 setPosition({ x: 0, y: 0 })
                 setIsFullscreenImageLoading(false)
+                previousActiveElementRef.current?.focus()
               }}
               className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur hover:bg-white dark:hover:bg-zinc-800 shadow-lg"
               aria-label="Close fullscreen"

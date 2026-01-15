@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,9 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
   const [name, setName] = useState(collection?.name || '')
   const [description, setDescription] = useState(collection?.description || '')
   const [errors, setErrors] = useState<{ name?: string; description?: string }>({})
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousActiveElementRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (collection) {
@@ -32,6 +35,54 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
       setDescription(collection.description)
     }
   }, [collection])
+
+  // Focus management: trap focus and restore on close
+  useEffect(() => {
+    // Store the previously focused element
+    previousActiveElementRef.current = document.activeElement as HTMLElement
+
+    // Focus the first input when dialog opens
+    const timer = setTimeout(() => {
+      nameInputRef.current?.focus()
+    }, 100)
+
+    // Focus trap: keep focus within the dialog
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      const dialog = dialogRef.current
+      if (!dialog) return
+
+      const focusableElements = dialog.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleTabKey)
+
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('keydown', handleTabKey)
+      // Restore focus to previously focused element
+      previousActiveElementRef.current?.focus()
+    }
+  }, [])
 
   const validate = (): boolean => {
     // Sanitize inputs first
@@ -134,6 +185,7 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
       aria-hidden="true"
     >
       <div 
+        ref={dialogRef}
         className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-labelledby="form-title"
@@ -165,9 +217,10 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
         >
           <div>
             <Label htmlFor="collection-name">
-              Collection Name <span className="text-red-600">*</span>
+              Collection Name <span className="text-red-600" aria-label="required">*</span>
             </Label>
             <Input
+              ref={nameInputRef}
               id="collection-name"
               type="text"
               value={name}
@@ -181,6 +234,7 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
               maxLength={100}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'name-error' : undefined}
+              aria-required="true"
               className={errors.name ? 'border-red-500' : ''}
             />
             {errors.name && (
@@ -192,7 +246,7 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
 
           <div>
             <Label htmlFor="collection-description">
-              Description <span className="text-red-600">*</span>
+              Description <span className="text-red-600" aria-label="required">*</span>
             </Label>
             <Textarea
               id="collection-description"
@@ -208,6 +262,7 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
               maxLength={1000}
               aria-invalid={!!errors.description}
               aria-describedby={errors.description ? 'description-error' : undefined}
+              aria-required="true"
               className={errors.description ? 'border-red-500' : ''}
             />
             {errors.description && (

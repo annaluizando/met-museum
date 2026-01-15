@@ -3,7 +3,7 @@
 import { X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -29,18 +29,64 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  if (!isOpen) return null
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onCancel()
-    }
-  }
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const cancelButtonRef = useRef<HTMLButtonElement>(null)
+  const previousActiveElementRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
+    if (!isOpen) return
+
+    // Store the previously focused element
+    previousActiveElementRef.current = document.activeElement as HTMLElement
+
+    // Focus the cancel button when dialog opens
+    const timer = setTimeout(() => {
+      cancelButtonRef.current?.focus()
+    }, 100)
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel()
+        return
+      }
+
+      // Focus trap: keep focus within the dialog
+      if (e.key === 'Tab') {
+        const dialog = dialogRef.current
+        if (!dialog) return
+
+        const focusableElements = dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey) {
+          // Shift + Tab
+          if (document.activeElement === firstElement) {
+            e.preventDefault()
+            lastElement?.focus()
+          }
+        } else {
+          // Tab
+          if (document.activeElement === lastElement) {
+            e.preventDefault()
+            firstElement?.focus()
+          }
+        }
+      }
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('keydown', handleKeyDown)
+      // Restore focus to previously focused element
+      previousActiveElementRef.current?.focus()
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null
 
   return (
     <div 
@@ -48,6 +94,7 @@ export function ConfirmDialog({
       onClick={onCancel}
     >
       <Card 
+        ref={dialogRef}
         className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl max-w-md w-full"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -86,6 +133,7 @@ export function ConfirmDialog({
         {/* Actions */}
         <div className="flex items-center gap-3 p-6 border-t border-zinc-200 dark:border-zinc-800">
           <Button
+            ref={cancelButtonRef}
             type="button"
             variant="outline"
             onClick={onCancel}

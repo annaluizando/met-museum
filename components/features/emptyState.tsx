@@ -29,8 +29,8 @@ export function EmptyState({
   const Icon = icons[type]
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="rounded-full p-6 mb-4 bg-zinc-100 dark:bg-zinc-800">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center" role="status" aria-live="polite">
+      <div className="rounded-full p-6 mb-4 bg-zinc-100 dark:bg-zinc-800" aria-hidden="true">
         <Icon className="w-12 h-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
       </div>
       

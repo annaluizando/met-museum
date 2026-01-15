@@ -76,7 +76,11 @@ export function ArtworkCard({ artwork, viewMode = 'grid' }: ArtworkCardProps) {
             
             {/* Public Domain Badge */}
             {artwork.isPublicDomain && (
-              <div className="absolute top-2 right-0 bg-green-600 text-white text-xs px-2 py-1 rounded-bl-lg rounded-tl-lg font-medium">
+              <div 
+                className="absolute top-2 right-0 bg-green-600 text-white text-xs px-2 py-1 rounded-bl-lg rounded-tl-lg font-medium"
+                role="status"
+                aria-label="This artwork is in the public domain"
+              >
                 Public Domain
               </div>
             )}

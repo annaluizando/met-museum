@@ -16,8 +16,8 @@ export function ErrorState({
   onRetry 
 }: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="rounded-full bg-red-50 dark:bg-red-950/30 p-6 mb-4">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center" role="alert" aria-live="assertive">
+      <div className="rounded-full bg-red-50 dark:bg-red-950/30 p-6 mb-4" aria-hidden="true">
         <AlertTriangle className="w-12 h-12 text-red-600 dark:text-red-500" aria-hidden="true" />
       </div>
       
