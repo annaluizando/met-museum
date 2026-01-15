@@ -4,20 +4,15 @@ import { QUERY_KEYS } from '@/lib/constants/query-keys'
 import { REACT_QUERY_CONFIG } from '@/lib/constants/config'
 import type { ArtworkObject } from '@/lib/types/artwork'
 
-/**
- * Curated list of famous artworks from the Met Museum
- * These are well-known pieces with high-quality images
- * Using a stable, pre-shuffled list to ensure consistent caching
- */
 const FEATURED_ARTWORK_IDS = [
-  436535, // The Great Wave
-  459055, // Bridge Over a Pond of Water Lilies (Monet)
-  438817, // Self-Portrait with a Straw Hat (Van Gogh)
-  436105, // Wheat Field with Cypresses (Van Gogh)
-  437133, // Irises (Van Gogh)
-  436528, // A Pair of Leather Clogs (Van Gogh)
-  437894, // Virgin and Child (Duccio)
-  459080, // Water Lilies (Monet)
+  436535, // Wheat Field with Cypresses (Vincent van Gogh)
+  459055, // The Annunciation (Hans Memling)
+  438817, // The Dance Class (Edgar Degas)
+  436105, // The Death of Socrates (Jacques Louis David)
+  436965, // The Monet Family in Their Garden at Argenteuil (Edouard Manet)
+  436528, // Irises (Vincent van Gogh)
+  437894, // Eugène Joseph Stanislas Foullon d'Ecotier (1753–1821) Antoine Vestier
+  459080, // Erasmus of Rotterdam (Erasmus of Rotterdam)
 ]
 
 /**
