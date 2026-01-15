@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Loader2 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { sanitizeImageUrl, truncateText, formatArtworkDate } from '@/lib/utils/formatters'
 import { AddToCollection } from './addToCollection'
+import { ArtworkImage } from './artworkImage'
 import type { ArtworkObject } from '@/lib/types/artwork'
 import { cn } from '@/lib/utils/cn'
 
@@ -23,11 +22,6 @@ export function ArtworkCard({ artwork, viewMode = 'grid' }: ArtworkCardProps) {
   const imageUrl = sanitizeImageUrl(artwork.primaryImageSmall || artwork.primaryImage)
   const isListView = viewMode === 'list'
   const [showAddButton, setShowAddButton] = useState(false)
-  const [isImageLoading, setIsImageLoading] = useState(true)
-
-  useEffect(() => {
-    setIsImageLoading(true)
-  }, [imageUrl])
 
   return (
     <div
@@ -62,28 +56,12 @@ export function ArtworkCard({ artwork, viewMode = 'grid' }: ArtworkCardProps) {
             isListView ? "w-48 shrink-0" : "aspect-square w-full"
           )}>
             {imageUrl ? (
-              <>
-                {/* Loading skeleton */}
-                {isImageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-zinc-200 dark:bg-zinc-800 z-10">
-                    <Loader2 className="w-8 h-8 text-zinc-400 dark:text-zinc-600 animate-spin" aria-hidden="true" />
-                    <span className="sr-only">Loading image...</span>
-                  </div>
-                )}
-                <Image
-                  src={imageUrl}
-                  alt={artwork.title || 'Untitled artwork'}
-                  fill
-                  className={cn(
-                    "object-cover transition-opacity duration-300 group-hover:scale-105",
-                    isImageLoading ? "opacity-0" : "opacity-100"
-                  )}
-                  sizes={isListView ? "192px" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"}
-                  loading="lazy"
-                  onLoad={() => setIsImageLoading(false)}
-                  onError={() => setIsImageLoading(false)}
-                />
-              </>
+              <ArtworkImage
+                key={imageUrl}
+                imageUrl={imageUrl}
+                alt={artwork.title || 'Untitled artwork'}
+                isListView={isListView}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600">
                 <svg
