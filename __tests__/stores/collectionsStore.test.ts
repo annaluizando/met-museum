@@ -34,12 +34,11 @@ describe('collectionsStore', () => {
     let collectionId: string
 
     act(() => {
-      result.current.addCollection({
+      collectionId = result.current.addCollection({
         name: 'Original Name',
         description: 'Original Description',
         artworkIds: [],
       })
-      collectionId = result.current.collections[0].id
     })
 
     act(() => {
@@ -58,12 +57,11 @@ describe('collectionsStore', () => {
     let collectionId: string
 
     act(() => {
-      result.current.addCollection({
+      collectionId = result.current.addCollection({
         name: 'Test Collection',
         description: 'Will be deleted',
         artworkIds: [],
       })
-      collectionId = result.current.collections[0].id
     })
 
     expect(result.current.collections).toHaveLength(1)
@@ -81,12 +79,11 @@ describe('collectionsStore', () => {
     let collectionId: string
 
     act(() => {
-      result.current.addCollection({
+      collectionId = result.current.addCollection({
         name: 'Test Collection',
         description: 'Test',
         artworkIds: [],
       })
-      collectionId = result.current.collections[0].id
     })
 
     act(() => {
@@ -102,12 +99,11 @@ describe('collectionsStore', () => {
     let collectionId: string
 
     act(() => {
-      result.current.addCollection({
+      collectionId = result.current.addCollection({
         name: 'Test Collection',
         description: 'Test',
         artworkIds: [12345, 67890],
       })
-      collectionId = result.current.collections[0].id
     })
 
     act(() => {
