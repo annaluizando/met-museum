@@ -3,62 +3,20 @@
 import { useEffect, useState } from 'react'
 import { ArtworkCard } from './artwork-card'
 import { ArtworkCardSkeleton } from './artwork-card-skeleton'
-import { batchGetArtworks } from '@/lib/api/artworks'
-import type { ArtworkObject } from '@/lib/types/artwork'
+import { useFeaturedArtworks } from '@/lib/hooks/use-featured-artworks'
 import { useSearchStore } from '@/lib/stores/search-store'
 import { cn } from '@/lib/utils/cn'
+import { Search } from 'lucide-react'
 
 /**
  * Featured artworks component
  * Shows curated highlights from the Met Museum on landing
+ * Uses React Query for efficient caching to prevent unnecessary API requests
  */
 export function FeaturedArtworks() {
   const { viewMode } = useSearchStore()
-  const [artworks, setArtworks] = useState<ArtworkObject[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: artworks = [], isLoading, isError } = useFeaturedArtworks()
   const [isTransitioning, setIsTransitioning] = useState(false)
-
-  useEffect(() => {
-    const fetchFeaturedArtworks = async () => {
-      try {
-        setIsLoading(true)
-        
-        // Curated list of famous artworks from the Met Museum
-        // These are well-known pieces with high-quality images
-        const featuredIds = [
-          436535, // The Great Wave
-          459055, // Bridge Over a Pond of Water Lilies (Monet)
-          438817, // Self-Portrait with a Straw Hat (Van Gogh)
-          436105, // Wheat Field with Cypresses (Van Gogh)
-          437133, // Irises (Van Gogh)
-          436528, // A Pair of Leather Clogs (Van Gogh)
-          437894, // Virgin and Child (Duccio)
-          459080, // Water Lilies (Monet)
-          436121, // Cypresses (Van Gogh)
-          435809, // Bouquet of Flowers (Renoir)
-          437311, // Madame Roulin and Her Baby (Van Gogh)
-          438754, // Oleanders (Van Gogh)
-        ]
-
-        // Shuffle and take 8 random artworks for variety
-        const shuffled = featuredIds.sort(() => Math.random() - 0.5)
-        const selectedIds = shuffled.slice(0, 8)
-        
-        const fetchedArtworks = await batchGetArtworks(selectedIds)
-        const validArtworks = fetchedArtworks.filter(
-          (artwork): artwork is ArtworkObject => artwork !== null
-        )
-        
-        setArtworks(validArtworks)
-      } catch (error) {
-        console.error('Failed to fetch featured artworks:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchFeaturedArtworks()
-  }, [])
 
   // Handle view mode transition animation
   useEffect(() => {
@@ -88,6 +46,27 @@ export function FeaturedArtworks() {
           {Array.from({ length: 8 }).map((_, index) => (
             <ArtworkCardSkeleton key={index} viewMode={viewMode} />
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (isError) {
+    // Show a friendly message encouraging users to search instead of an error
+    // This keeps the landing page positive and guides users to action
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 mb-4">
+            <Search className="w-8 h-8 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
+          </div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+            Explore The Met Collection
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
+            Discover over 470,000 artworks from The Metropolitan Museum of Art. 
+            Start searching by artwork title, artist name, culture, or time period.
+          </p>
         </div>
       </div>
     )
