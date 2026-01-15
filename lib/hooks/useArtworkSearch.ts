@@ -3,7 +3,6 @@ import { searchArtworks, batchGetArtworks } from '@/lib/api/artworks'
 import { QUERY_KEYS } from '@/lib/constants/query-keys'
 import { PAGINATION, REACT_QUERY_CONFIG } from '@/lib/constants/config'
 import { hasActiveFilters } from '@/lib/utils/filters'
-import { sortArtworks } from '@/lib/utils/sort'
 import type { SearchFilters, ArtworkObject } from '@/lib/types/artwork'
 import type { SortOrder } from '@/lib/stores/search-store'
 
@@ -50,27 +49,25 @@ export function useArtworkSearch({
       const pageIds = searchResults.objectIDs.slice(startIndex, endIndex)
       const artworks = await batchGetArtworks(pageIds)
       
-      const validArtworks = artworks.filter(
-        (artwork): artwork is ArtworkObject => artwork !== null
-      )
+      const artworkMap = new Map<number, ArtworkObject>()
+      artworks.forEach((artwork) => {
+        if (artwork !== null) {
+          artworkMap.set(artwork.objectID, artwork)
+        }
+      })
+
+      const orderedArtworks = pageIds
+        .map(id => artworkMap.get(id))
+        .filter((artwork): artwork is ArtworkObject => artwork !== null)
 
       const filteredArtworks = filters?.hasImages === true
-        ? validArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
-        : validArtworks
-
-      const imageSortedArtworks = filteredArtworks.sort((a, b) => {
-        const aHasImage = !!(a.primaryImage || a.primaryImageSmall)
-        const bHasImage = !!(b.primaryImage || b.primaryImageSmall)
-        
-        if (aHasImage === bHasImage) return 0
-        if (aHasImage && !bHasImage) return -1
-        return 1
-      })
+        ? orderedArtworks.filter(artwork => !!(artwork.primaryImage || artwork.primaryImageSmall))
+        : orderedArtworks
 
       const hasMore = endIndex < (searchResults.objectIDs?.length ?? 0)
 
       return {
-        artworks: imageSortedArtworks,
+        artworks: filteredArtworks,
         nextOffset: hasMore ? endIndex : undefined,
         hasMore,
       }
