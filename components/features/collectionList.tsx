@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -30,12 +30,8 @@ export function CollectionList() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCollection, setEditingCollection] = useState<CollectionItem | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
-  const [isMounted, setIsMounted] = useState(false)
+  const isMounted = typeof window !== 'undefined'
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   const handleEdit = (collection: CollectionItem) => {
     setEditingCollection(collection)

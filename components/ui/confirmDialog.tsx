@@ -64,7 +64,7 @@ export function ConfirmDialog({
       // Restore focus to previously focused element
       previousActiveElementRef.current?.focus()
     }
-  }, [isOpen]);
+  }, [isOpen, onCancel]);
 
   if (!isOpen) return null
 

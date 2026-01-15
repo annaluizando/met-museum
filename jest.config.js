@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -24,4 +25,5 @@ const customJestConfig = {
   ],
 }
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 module.exports = createJestConfig(customJestConfig)

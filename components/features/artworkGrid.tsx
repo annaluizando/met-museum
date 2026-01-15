@@ -77,8 +77,11 @@ export function ArtworkGrid() {
   }, [handleObserver, shouldVirtualize])
 
   useEffect(() => {
-    setIsTransitioning(true)
-    const timer = setTimeout(() => setIsTransitioning(false), 500)
+    // Set transition state after render to avoid cascading renders
+    const timer = setTimeout(() => {
+      setIsTransitioning(true)
+      setTimeout(() => setIsTransitioning(false), 500)
+    }, 0)
     return () => clearTimeout(timer)
   }, [viewMode])
 
@@ -207,7 +210,7 @@ export function ArtworkGrid() {
       {/* End of results indicator */}
       {!hasNextPage && artworks.length > 0 && (
         <div className="text-center py-8 text-sm text-zinc-500 dark:text-zinc-400">
-          You've reached the end of the results
+          You&apos;ve reached the end of the results
         </div>
       )}
     </div>
@@ -250,7 +253,7 @@ export function ArtworkGrid() {
         {/* End of results indicator */}
         {!hasNextPage && artworks.length > 0 && (
           <div className="text-center py-8 text-sm text-zinc-500 dark:text-zinc-400">
-            You've reached the end of the results
+            You&apos;ve reached the end of the results
           </div>
         )}
       </div>

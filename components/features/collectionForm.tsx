@@ -32,8 +32,10 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
 
   useEffect(() => {
     if (collection) {
-      setName(collection.name)
-      setDescription(collection.description)
+      setTimeout(() => {
+        setName(collection.name)
+        setDescription(collection.description)
+      }, 0)
     }
   }, [collection])
 

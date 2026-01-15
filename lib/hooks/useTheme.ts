@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -25,7 +25,7 @@ export function useTheme() {
   }
 
   // Apply theme to document
-  const applyTheme = (newTheme: Theme) => {
+  const applyTheme = useCallback((newTheme: Theme) => {
     const root = document.documentElement
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme
 
@@ -34,7 +34,7 @@ export function useTheme() {
     } else {
       root.classList.remove('dark')
     }
-  }
+  }, [])
 
   // Set theme and persist
   const setTheme = (newTheme: Theme) => {
@@ -47,28 +47,31 @@ export function useTheme() {
   useEffect(() => {
     const stored = localStorage.getItem('theme') as Theme | null
     const initialTheme = stored || 'system'
-    setThemeState(initialTheme)
-    applyTheme(initialTheme)
-    setMounted(true)
+    setTimeout(() => {
+      setThemeState(initialTheme)
+      applyTheme(initialTheme)
+      setMounted(true)
+    }, 0)
 
     // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const handleChange = () => {
-      if (theme === 'system') {
+      const currentTheme = stored || 'system'
+      if (currentTheme === 'system') {
         applyTheme('system')
       }
     }
 
     mediaQuery.addEventListener('change', handleChange)
     return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
+  }, [applyTheme])
 
   // Update when theme changes
   useEffect(() => {
     if (mounted) {
       applyTheme(theme)
     }
-  }, [theme, mounted])
+  }, [theme, mounted, applyTheme])
 
   return {
     theme,

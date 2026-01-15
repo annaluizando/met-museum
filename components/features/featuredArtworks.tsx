@@ -20,8 +20,10 @@ export function FeaturedArtworks() {
 
   // Handle view mode transition animation
   useEffect(() => {
-    setIsTransitioning(true)
-    const timer = setTimeout(() => setIsTransitioning(false), 500)
+    const timer = setTimeout(() => {
+      setIsTransitioning(true)
+      setTimeout(() => setIsTransitioning(false), 500)
+    }, 0)
     return () => clearTimeout(timer)
   }, [viewMode])
 

@@ -160,8 +160,10 @@ export function SearchBar() {
     const trimmedStoreQuery = query.trim()
 
     if (validatedQuery !== trimmedStoreQuery) {
-      setLocalQuery(validatedQuery)
-      setQuery(validatedQuery)
+      setTimeout(() => {
+        setLocalQuery(validatedQuery)
+        setQuery(validatedQuery)
+      }, 0)
     }
   }, [searchParams, query, setQuery])
 

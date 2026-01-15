@@ -24,14 +24,10 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   const { collections, addArtworkToCollection, removeArtworkFromCollection } = useCollectionsStore()
   const [isOpen, setIsOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const isMounted = typeof window !== 'undefined'
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElementRef = useRef<HTMLElement | null>(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Prevent body scroll when modal is open and manage focus
   useEffect(() => {
@@ -120,7 +116,7 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   )
 
   // Render modal via portal to escape parent container constraints
-  if (!mounted) {
+  if (!isMounted) {
     return button
   }
 
@@ -189,7 +185,7 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
           {collections.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-                You don't have any collections yet.
+                You don&apos;t have any collections yet.
               </p>
               <Button onClick={handleCreateNew}>
                 <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
