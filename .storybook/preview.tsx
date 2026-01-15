@@ -24,7 +24,7 @@ const withQueryProvider = (Story: React.ComponentType) => (
 const WithTheme = ({ children }: { children: React.ReactNode }) => {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('theme') || 'system';
+      const stored = localStorage.getItem('theme') || 'dark';
       const root = document.documentElement;
       
       if (stored === 'dark') {

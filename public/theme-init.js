@@ -10,9 +10,8 @@
   }
   
   const theme = getTheme();
-  const resolved = theme === 'system' ? getSystemTheme() : theme;
   
-  if (resolved === 'dark') {
+  if (theme === 'dark') {
     document.documentElement.classList.add('dark');
   }
 })();

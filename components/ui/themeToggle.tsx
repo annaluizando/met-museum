@@ -5,8 +5,8 @@ import { useTheme } from '@/lib/hooks/useTheme'
 import { Button } from '@/components/ui/button'
 
 /**
- * Theme toggle button with system preference detection
- * Supports light, dark, and system modes
+ * Theme toggle button
+ * Supports light, dark modes
  */
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme, mounted } = useTheme()
