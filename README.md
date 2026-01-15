@@ -41,7 +41,6 @@ A modern, accessible web application for exploring The Metropolitan Museum of Ar
 - [Trade-offs & Future Improvements](#trade-offs--future-improvements)
 - [Testing](#testing)
 - [Storybook](#storybook)
-- [Contributing](#contributing)
 
 ## 🏗️ Architecture
 
