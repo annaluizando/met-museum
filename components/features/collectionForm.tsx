@@ -66,6 +66,7 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
 
     if (!validate()) {
       return
@@ -103,13 +104,42 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
     onClose()
   }
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70"
+      onClick={handleBackdropClick}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault()
+        }
+      }}
+      aria-hidden="true"
+    >
       <div 
         className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-labelledby="form-title"
         aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-800">
@@ -127,7 +157,12 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form 
+          onSubmit={handleSubmit} 
+          className="p-6 space-y-4" 
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div>
             <Label htmlFor="collection-name">
               Collection Name <span className="text-red-600">*</span>
@@ -140,6 +175,8 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
                 const value = e.target.value
                 setName(value.length <= 100 ? value : name)
               }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
               placeholder="e.g., My Favorite Artworks"
               maxLength={100}
               aria-invalid={!!errors.name}
@@ -164,6 +201,8 @@ export function CollectionForm({ collection, onClose, onSuccess }: CollectionFor
                 const value = e.target.value
                 setDescription(value.length <= 1000 ? value : description)
               }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
               placeholder="Describe your collection..."
               rows={4}
               maxLength={1000}

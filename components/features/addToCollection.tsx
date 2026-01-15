@@ -31,12 +31,11 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen || isCreating) {
+      const originalOverflow = document.body.style.overflow
       document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
     }
   }, [isOpen, isCreating])
 
@@ -90,22 +89,18 @@ export function AddToCollection({ artworkId, artworkTitle, onSuccess }: AddToCol
   }
 
   const modalContent = isCreating ? (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 animate-in fade-in duration-200">
-      <div className="animate-in zoom-in-95 duration-200">
-        <CollectionForm
-          collection={null}
-          onClose={() => {
-            setIsCreating(false)
-            setIsOpen(false)
-          }}
-          onSuccess={(collectionId) => {
-            if (collectionId) {
-              handleCollectionCreated(collectionId)
-            }
-          }}
-        />
-      </div>
-    </div>
+    <CollectionForm
+      collection={null}
+      onClose={() => {
+        setIsCreating(false)
+        setIsOpen(false)
+      }}
+      onSuccess={(collectionId) => {
+        if (collectionId) {
+          handleCollectionCreated(collectionId)
+        }
+      }}
+    />
   ) : isOpen ? (
     <>
       {/* Backdrop */}
